@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Repositories\" />
+    <None Remove="UnitOfWorks\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Repositories\" />
+    <Folder Include="UnitOfWorks\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FDex.Application\FDex.Application.csproj" />
+  </ItemGroup>
+</Project>
