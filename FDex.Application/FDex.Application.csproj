@@ -9,10 +9,16 @@
   <ItemGroup>
     <None Remove="Contracts\" />
     <None Remove="Common\" />
+    <None Remove="Contracts\Infrastructure\" />
+    <None Remove="Models\" />
+    <None Remove="Models\Infrastructure\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Contracts\" />
     <Folder Include="Common\" />
+    <Folder Include="Contracts\Infrastructure\" />
+    <Folder Include="Models\" />
+    <Folder Include="Models\Infrastructure\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FDex.Domain\FDex.Domain.csproj" />
