@@ -12,6 +12,7 @@
     <None Remove="Contracts\Infrastructure\" />
     <None Remove="Models\" />
     <None Remove="Models\Infrastructure\" />
+    <None Remove="Exceptions\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Contracts\" />
@@ -19,8 +20,12 @@
     <Folder Include="Contracts\Infrastructure\" />
     <Folder Include="Models\" />
     <Folder Include="Models\Infrastructure\" />
+    <Folder Include="Exceptions\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FDex.Domain\FDex.Domain.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.7.1" />
   </ItemGroup>
 </Project>
