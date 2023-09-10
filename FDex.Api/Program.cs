@@ -1,10 +1,14 @@
 ﻿using FDex.Infrastructure.Common;
+using FDex.Application.Common;
+using FDex.Persistence.Common;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddHttpContextAccessor();
+builder.Services.ConfigureApplicationServices();
 builder.Services.ConfigureInfrastructureServices();
+builder.Services.ConfigurePersistenceServices(builder.Configuration);
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

@@ -8,13 +8,18 @@
 
   <ItemGroup>
     <None Remove="Repositories\" />
-    <None Remove="UnitOfWorks\" />
+    <None Remove="DbContexts\" />
+    <None Remove="Common\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Repositories\" />
-    <Folder Include="UnitOfWorks\" />
+    <Folder Include="DbContexts\" />
+    <Folder Include="Common\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FDex.Application\FDex.Application.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.10" />
   </ItemGroup>
 </Project>
