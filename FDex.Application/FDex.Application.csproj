@@ -13,6 +13,22 @@
     <None Remove="Models\" />
     <None Remove="Models\Infrastructure\" />
     <None Remove="Exceptions\" />
+    <None Remove="Features\" />
+    <None Remove="Features\Transactions\" />
+    <None Remove="Features\Transactions\Requests\" />
+    <None Remove="Features\Transactions\Handlers\" />
+    <None Remove="Features\Transactions\Events\" />
+    <None Remove="Features\Transactions\Requests\Queries\" />
+    <None Remove="Features\Transactions\Handlers\Queries\" />
+    <None Remove="Contracts\Persistence\" />
+    <None Remove="Features\Transactions\Handlers\Commands\" />
+    <None Remove="Features\Transactions\Requests\Commands\" />
+    <None Remove="DTOs\" />
+    <None Remove="DTOs\Transaction\" />
+    <None Remove="Responses\" />
+    <None Remove="Responses\Transaction\" />
+    <None Remove="Responses\Common\" />
+    <None Remove="Profiles\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Contracts\" />
@@ -21,11 +37,32 @@
     <Folder Include="Models\" />
     <Folder Include="Models\Infrastructure\" />
     <Folder Include="Exceptions\" />
+    <Folder Include="Features\" />
+    <Folder Include="Features\Transactions\" />
+    <Folder Include="Features\Transactions\Requests\" />
+    <Folder Include="Features\Transactions\Handlers\" />
+    <Folder Include="Features\Transactions\Events\" />
+    <Folder Include="Features\Transactions\Requests\Queries\" />
+    <Folder Include="Features\Transactions\Handlers\Queries\" />
+    <Folder Include="Contracts\Persistence\" />
+    <Folder Include="Features\Transactions\Handlers\Commands\" />
+    <Folder Include="Features\Transactions\Requests\Commands\" />
+    <Folder Include="DTOs\" />
+    <Folder Include="DTOs\Transaction\" />
+    <Folder Include="Responses\" />
+    <Folder Include="Responses\Transaction\" />
+    <Folder Include="Responses\Common\" />
+    <Folder Include="Profiles\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FDex.Domain\FDex.Domain.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.7.1" />
+    <PackageReference Include="Nethereum.JsonRpc.Client" Version="4.16.0" />
+    <PackageReference Include="Nethereum.Web3" Version="4.16.0" />
+    <PackageReference Include="MediatR" Version="12.1.1" />
+    <PackageReference Include="AutoMapper" Version="12.0.1" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
   </ItemGroup>
 </Project>
