@@ -7,14 +7,14 @@ namespace FDex.Persistence.Repositories
     public class UnitOfWork : IUnitOfWork
     {
         private readonly FDexDbContext _context;
-        private ITransactionRepository _transactionRepository;
+        private ISwapRepository _swapRepository;
 
         public UnitOfWork(FDexDbContext context)
         {
             _context = context;
         }
 
-        public ITransactionRepository TransactionRepository => _transactionRepository ??= new TransactionRepository(_context);
+        public ISwapRepository SwapRepository => _swapRepository ??= new SwapRepository(_context);
 
         public void Dispose()
         {

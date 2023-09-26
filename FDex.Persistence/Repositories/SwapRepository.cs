@@ -5,10 +5,10 @@ using FDex.Persistence.DbContexts;
 
 namespace FDex.Persistence.Repositories
 {
-	public class TransactionRepository : GenericRepository<Transaction>, ITransactionRepository
+	public class SwapRepository : GenericRepository<Swap>, ISwapRepository
 	{
 		public readonly FDexDbContext _context;
-		public TransactionRepository(FDexDbContext context) : base(context)
+		public SwapRepository(FDexDbContext context) : base(context)
         {
 			_context = context;
 		}

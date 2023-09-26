@@ -17,7 +17,7 @@ namespace FDex.Persistence.Common
             );
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped<IUnitOfWork, UnitOfWork>();
-            services.AddScoped<ITransactionRepository, TransactionRepository>();
+            services.AddScoped<ISwapRepository, SwapRepository>();
             return services;
         }
     }

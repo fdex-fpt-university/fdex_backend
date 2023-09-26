@@ -1,6 +1,9 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
+using FDex.Application.Contracts.Persistence;
+using AutoMapper;
+using FDex.Application.Services;
 
 namespace FDex.Application.Common
 {
@@ -10,7 +13,7 @@ namespace FDex.Application.Common
         {
             services.AddAutoMapper(Assembly.GetExecutingAssembly());
             services.AddMediatR(config => config.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly()));
-
+            services.AddScoped<EventDispatcherService>();
             return services;
         }
     }
