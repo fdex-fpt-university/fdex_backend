@@ -9,10 +9,9 @@ namespace FDex.Domain.Entities
         public string Sender { get; set; }
         public string TokenIn { get; set; }
         public string TokenOut { get; set; }
-        public BigInteger AmountIn { get; set; }
-        public BigInteger AmountOut { get; set; }
-        public BigInteger Fee { get; set; }
+        public string AmountIn { get; set; }
+        public string AmountOut { get; set; }
+        public string Fee { get; set; }
         public DateTime Time { get; set; }
     }
 }
-

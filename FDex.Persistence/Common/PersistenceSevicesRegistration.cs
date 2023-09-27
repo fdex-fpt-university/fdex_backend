@@ -8,18 +8,19 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace FDex.Persistence.Common
 {
-	public static class PersistenceSevicesRegistration
-	{
+    public static class PersistenceSevicesRegistration
+    {
         public static IServiceCollection ConfigurePersistenceServices(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddDbContext<FDexDbContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("FDexDB"))
-            );
+            {
+                options.UseSqlServer(configuration.GetConnectionString("FDexDB"));
+            },
+            ServiceLifetime.Singleton);
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-            services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddSingleton<IUnitOfWork, UnitOfWork>();
             services.AddScoped<ISwapRepository, SwapRepository>();
             return services;
         }
     }
 }
-

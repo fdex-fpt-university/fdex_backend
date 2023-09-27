@@ -8,7 +8,7 @@ using FDex.Application.Services;
 
 internal class Program
 {
-    private static void Main(string[] args)
+    private static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
@@ -20,10 +20,11 @@ internal class Program
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
+        //builder.Services.AddHostedService<EventDispatcherService>();
         using (ServiceProvider serviceProvider = builder.Services.BuildServiceProvider())
         {
             EventDispatcherService dispatcher = serviceProvider.GetRequiredService<EventDispatcherService>();
-            dispatcher.GetLogsTokenSwapObservableSubscription();
+            await dispatcher.GetLogsTokenSwapObservableSubscription();
         }
         builder.Services.AddCors(c =>
         {
