@@ -3,7 +3,7 @@ using FDex.Domain.Entities;
 
 namespace FDex.Application.Contracts.Persistence
 {
-	public interface ITransactionRepository : IGenericRepository<Transaction>
+	public interface ISwapRepository : IGenericRepository<Swap>
 	{
 	}
 }

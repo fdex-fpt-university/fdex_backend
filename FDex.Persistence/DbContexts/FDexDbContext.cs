@@ -16,13 +16,13 @@ namespace FDex.Persistence.DbContexts
         {
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(FDexDbContext).Assembly);
 
-            modelBuilder.Entity<Transaction>(entity =>
+            modelBuilder.Entity<Swap>(entity =>
             {
                 entity.HasKey(u => u.Id);
             });
         }
 
-        public DbSet<Transaction> Transactions { get; set; }
+        public DbSet<Swap> Swaps { get; set; }
     }
 }
 
