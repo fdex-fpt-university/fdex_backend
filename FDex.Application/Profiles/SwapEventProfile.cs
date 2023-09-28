@@ -11,7 +11,8 @@ namespace FDex.Application.Profiles
         public SwapEventProfile()
         {
             CreateMap<SwapDTOAdd, Swap>()
-                .ForMember(dest => dest.Sender, opt => opt.MapFrom(src => src.Sender))
+                .ForMember(dest => dest.TxnHash, opt => opt.MapFrom(src => src.TxnHash))
+                .ForMember(dest => dest.Wallet, opt => opt.MapFrom(src => src.Wallet))
                 .ForMember(dest => dest.TokenIn, opt => opt.MapFrom(src => src.TokenIn))
                 .ForMember(dest => dest.TokenOut, opt => opt.MapFrom(src => src.TokenOut))
                 .ForMember(dest => dest.AmountIn, opt => opt.MapFrom(src => src.AmountIn.ToString()))

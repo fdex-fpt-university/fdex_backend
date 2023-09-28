@@ -41,7 +41,8 @@ namespace FDex.Application.Services
                             {
                                 swapDTOAdd = new()
                                 {
-                                    Sender = decoded.Event.Sender,
+                                    TxnHash = decoded.Log.TransactionHash,
+                                    Wallet = decoded.Event.Wallet,
                                     TokenIn = decoded.Event.TokenIn,
                                     TokenOut = decoded.Event.TokenOut,
                                     AmountIn = decoded.Event.AmountIn,

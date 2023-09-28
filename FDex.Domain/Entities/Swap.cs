@@ -5,8 +5,8 @@ namespace FDex.Domain.Entities
 {
 	public class Swap
 	{
-        public Guid Id { get; set; }
-        public string Sender { get; set; }
+        public string TxnHash { get; set; }
+        public string Wallet { get; set; }
         public string TokenIn { get; set; }
         public string TokenOut { get; set; }
         public string AmountIn { get; set; }

@@ -18,7 +18,7 @@ namespace FDex.Persistence.DbContexts
 
             modelBuilder.Entity<Swap>(entity =>
             {
-                entity.HasKey(u => u.Id);
+                entity.HasKey(u => u.TxnHash);
             });
         }
 

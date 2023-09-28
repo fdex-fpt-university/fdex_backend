@@ -8,7 +8,7 @@ namespace FDex.Application.DTOs.Swap
     public class SwapDTOBase : IEventDTO
     {
         [Parameter("address", "sender", 1, true)]
-        public virtual string Sender { get; set; }
+        public virtual string Wallet { get; set; }
 
         [Parameter("address", "tokenIn", 2, false)]
         public virtual string TokenIn { get; set; }

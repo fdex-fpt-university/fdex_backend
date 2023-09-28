@@ -24,6 +24,7 @@ namespace FDex.Api.Controllers
         }
 
         [HttpGet]
+        // ví, filter lọc search phân trang
         public async Task<ActionResult<List<SwapDTOView>>> Get()
         {
             var swaps = await _mediator.Send(new GetSwapsRequest());
