@@ -14,7 +14,14 @@ namespace FDex.Persistence.Common
         {
             services.AddDbContext<FDexDbContext>(options =>
             {
-                options.UseSqlServer(configuration.GetConnectionString("FDexDB"));
+                options.UseSqlServer(configuration.GetConnectionString("FDexDB"), sqlServerOptionsAction: sqlOptions =>
+                {
+                    sqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 3,
+                    maxRetryDelay: TimeSpan.FromSeconds(30),
+                    errorNumbersToAdd: null
+            );
+                });
             },
             ServiceLifetime.Singleton);
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
