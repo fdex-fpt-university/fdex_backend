@@ -21,7 +21,7 @@ namespace FDex.Application.Features.Swaps.Handlers.Queries
 
         public async Task<List<SwapDTOView>> Handle(GetSwapsRequest request, CancellationToken cancellationToken)
         {
-            var swaps = await _unitOfWork.SwapRepository.GetAllAsync();
+            var swaps = await _unitOfWork.SwapRepository.GetSwapsByCondition(request.Wallet, request.Page, request.PageSize);
             List<SwapDTOView> swapDTOs = _mapper.Map<List<SwapDTOView>>(swaps);
             return swapDTOs;
         }
