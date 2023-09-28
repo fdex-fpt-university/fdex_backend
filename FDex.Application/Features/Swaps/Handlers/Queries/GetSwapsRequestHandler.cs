@@ -8,7 +8,7 @@ using MediatR;
 
 namespace FDex.Application.Features.Swaps.Handlers.Queries
 {
-	public class GetSwapsRequestHandler : IRequestHandler<GetSwapsRequest, List<SwapDTO>>
+	public class GetSwapsRequestHandler : IRequestHandler<GetSwapsRequest, List<SwapDTOView>>
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
@@ -19,10 +19,11 @@ namespace FDex.Application.Features.Swaps.Handlers.Queries
             _mapper = mapper;
         }
 
-        public async Task<List<SwapDTO>> Handle(GetSwapsRequest request, CancellationToken cancellationToken)
+        public async Task<List<SwapDTOView>> Handle(GetSwapsRequest request, CancellationToken cancellationToken)
         {
             var swaps = await _unitOfWork.SwapRepository.GetAllAsync();
-            return _mapper.Map<List<SwapDTO>>(swaps);
+            List<SwapDTOView> swapDTOs = _mapper.Map<List<SwapDTOView>>(swaps);
+            return swapDTOs;
         }
     }
 }

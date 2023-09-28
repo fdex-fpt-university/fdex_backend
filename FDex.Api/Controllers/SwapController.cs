@@ -15,16 +15,16 @@ namespace FDex.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class TransactionController : ControllerBase
+    public class SwapController : ControllerBase
     {
         private readonly IMediator _mediator;
-        public TransactionController(IMediator mediator)
+        public SwapController(IMediator mediator)
         {
             _mediator = mediator;
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<SwapDTO>>> Get()
+        public async Task<ActionResult<List<SwapDTOView>>> Get()
         {
             var swaps = await _mediator.Send(new GetSwapsRequest());
             return Ok(swaps);

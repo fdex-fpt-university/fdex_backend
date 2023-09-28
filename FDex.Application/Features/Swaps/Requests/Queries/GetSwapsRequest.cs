@@ -4,7 +4,7 @@ using MediatR;
 
 namespace FDex.Application.Features.Swaps.Requests.Queries
 {
-	public class GetSwapsRequest : IRequest<List<SwapDTO>>
+	public class GetSwapsRequest : IRequest<List<SwapDTOView>>
 	{
 	}
 }
