@@ -20,12 +20,7 @@ internal class Program
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
-        //builder.Services.AddHostedService<EventDispatcherService>();
-        using (ServiceProvider serviceProvider = builder.Services.BuildServiceProvider())
-        {
-            EventDispatcherService dispatcher = serviceProvider.GetRequiredService<EventDispatcherService>();
-            await dispatcher.GetLogsTokenSwapObservableSubscription();
-        }
+        builder.Services.AddHostedService<EventDispatcherService>();
         builder.Services.AddCors(c =>
         {
             c.AddPolicy("CorsPolicy",
