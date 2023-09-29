@@ -23,11 +23,10 @@ namespace FDex.Api.Controllers
             _mediator = mediator;
         }
 
-        [HttpGet("{wallet}")]
-        // ví, filter lọc search phân trang
-        public async Task<ActionResult<List<SwapDTOView>>> Get(string wallet, int page, int pagageSize = 5)
+        [HttpGet("{wallet}/{page}")]
+        public async Task<ActionResult<List<SwapDTOView>>> Get(string wallet, int page, int pageSize = 7)
         {
-            var swaps = await _mediator.Send(new GetSwapsRequest() { Wallet = wallet, Page = page, PageSize = pagageSize});
+            var swaps = await _mediator.Send(new GetSwapsRequest() { Wallet = wallet, Page = page, PageSize = pageSize});
             return Ok(swaps);
         }
     }

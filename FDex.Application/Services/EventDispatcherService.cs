@@ -47,7 +47,8 @@ namespace FDex.Application.Services
                                     TokenOut = decoded.Event.TokenOut,
                                     AmountIn = decoded.Event.AmountIn,
                                     AmountOut = decoded.Event.AmountOut,
-                                    Fee = decoded.Event.Fee
+                                    Fee = decoded.Event.Fee,
+                                    MarkPrice = decoded.Event.MarkPrice
                                 };
                             }
                             else

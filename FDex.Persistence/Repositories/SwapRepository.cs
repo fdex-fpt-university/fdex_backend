@@ -18,6 +18,7 @@ namespace FDex.Persistence.Repositories
         {
             return await _context.Swaps
                 .Where(s => s.Wallet.Equals(wallet))
+                .OrderByDescending(e => e.Time)
                 .Skip((page -1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
