@@ -5,6 +5,7 @@ namespace FDex.Application.Contracts.Persistence
     {
         Task<IReadOnlyList<T>> GetAllAsync();
         Task<T> AddAsync(T entity);
+        Task<T> FindAsync(string id);
     }
 }
 

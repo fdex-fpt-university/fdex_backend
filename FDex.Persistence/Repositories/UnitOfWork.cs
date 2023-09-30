@@ -8,6 +8,7 @@ namespace FDex.Persistence.Repositories
     {
         private readonly FDexDbContext _context;
         private ISwapRepository _swapRepository;
+        private IUserRepository _userRepository;
 
         public UnitOfWork(FDexDbContext context)
         {
@@ -15,6 +16,7 @@ namespace FDex.Persistence.Repositories
         }
 
         public ISwapRepository SwapRepository => _swapRepository ??= new SwapRepository(_context);
+        public IUserRepository UserRepository => _userRepository ??= new UserRepository(_context);
 
         public void Dispose()
         {

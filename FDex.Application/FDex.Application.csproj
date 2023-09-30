@@ -25,6 +25,14 @@
     <None Remove="Features\Swaps\Handlers\Commands\" />
     <None Remove="Features\Swaps\Requests\Commands\" />
     <None Remove="Services\" />
+    <None Remove="DTOs\AddLiquidity\" />
+    <None Remove="Features\DashboardItems\" />
+    <None Remove="Features\DashboardItems\Requests\" />
+    <None Remove="Features\DashboardItems\Handlers\" />
+    <None Remove="Features\DashboardItems\Handlers\Commands\" />
+    <None Remove="Features\DashboardItems\Requests\Queries\" />
+    <None Remove="Features\DashboardItems\Requests\Commands\" />
+    <None Remove="Features\DashboardItems\Handlers\Queries\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Contracts\" />
@@ -45,6 +53,14 @@
     <Folder Include="Features\Swaps\Handlers\Commands\" />
     <Folder Include="Features\Swaps\Requests\Commands\" />
     <Folder Include="Services\" />
+    <Folder Include="DTOs\AddLiquidity\" />
+    <Folder Include="Features\DashboardItems\" />
+    <Folder Include="Features\DashboardItems\Requests\" />
+    <Folder Include="Features\DashboardItems\Handlers\" />
+    <Folder Include="Features\DashboardItems\Handlers\Commands\" />
+    <Folder Include="Features\DashboardItems\Requests\Queries\" />
+    <Folder Include="Features\DashboardItems\Requests\Commands\" />
+    <Folder Include="Features\DashboardItems\Handlers\Queries\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FDex.Domain\FDex.Domain.csproj" />

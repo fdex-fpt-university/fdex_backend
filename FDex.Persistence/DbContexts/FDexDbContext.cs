@@ -20,9 +20,15 @@ namespace FDex.Persistence.DbContexts
             {
                 entity.HasKey(u => u.TxnHash);
             });
+
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.HasKey(u => u.Wallet);
+            });
         }
 
         public DbSet<Swap> Swaps { get; set; }
+        public DbSet<User> Users { get; set; }
     }
 }
 

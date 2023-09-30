@@ -34,6 +34,7 @@ namespace FDex.Application.Services
                     subscription.GetSubscriptionDataResponsesAsObservable().Subscribe(async log =>
                     {
                         SwapDTOAdd swapDTOAdd = new();
+                        User user = new();
                         try
                         {
                             var decoded = Event<SwapDTO>.DecodeEvent(log);
@@ -50,6 +51,11 @@ namespace FDex.Application.Services
                                     Fee = decoded.Event.Fee,
                                     MarkPrice = decoded.Event.MarkPrice
                                 };
+                                user = new()
+                                {
+                                    Wallet = decoded.Event.Wallet,
+                                    CreatedDate = DateTime.Now
+                                };
                             }
                             else
                             {
@@ -61,6 +67,12 @@ namespace FDex.Application.Services
                             Console.WriteLine("Log Address: " + log.Address + " is not a standard swap log:", ex.Message);
                         }
                         Swap swap = _mapper.Map<Swap>(swapDTOAdd);
+                        var foundUser = await _unitOfWork.UserRepository.FindAsync(user.Wallet);
+                        if (foundUser == null)
+                        {
+                            await _unitOfWork.UserRepository.AddAsync(user);
+                            await _unitOfWork.Save();
+                        }
                         await _unitOfWork.SwapRepository.AddAsync(swap);
                         await _unitOfWork.Save();
 

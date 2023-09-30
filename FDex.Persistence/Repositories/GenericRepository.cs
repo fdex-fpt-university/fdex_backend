@@ -20,6 +20,11 @@ namespace FDex.Persistence.Repositories
             return entity;
         }
 
+        public async Task<T> FindAsync(string id)
+        {
+            return await _context.Set<T>().FindAsync(id);
+        }
+
         public async Task<IReadOnlyList<T>> GetAllAsync()
         {
             return await _context.Set<T>().ToListAsync();
