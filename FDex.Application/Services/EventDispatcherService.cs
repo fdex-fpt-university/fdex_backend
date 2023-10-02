@@ -1,11 +1,12 @@
 ﻿using System;
 using AutoMapper;
 using FDex.Application.Contracts.Persistence;
-using FDex.Application.DTOs.AddLiquidity;
+using FDex.Application.DTOs.Liquidity;
 using FDex.Application.DTOs.Swap;
 using FDex.Domain.Entities;
 using Microsoft.Extensions.Hosting;
 using Nethereum.Contracts;
+using Nethereum.JsonRpc.Client;
 using Nethereum.JsonRpc.WebSocketStreamingClient;
 using Nethereum.RPC.Reactive.Eth.Subscriptions;
 using Org.BouncyCastle.Asn1.Ocsp;
@@ -28,7 +29,6 @@ namespace FDex.Application.Services
             while (!stoppingToken.IsCancellationRequested)
             {
                 using var client = new StreamingWebSocketClient("wss://bsc-testnet.publicnode.com");
-                //using var client = new StreamingWebSocketClient("wss://bsc.getblock.io/c9c2311d-f632-47b1-ae8f-7cde9cd02fba/testnet/");
                 var swapFilterInput = Event<SwapDTO>.GetEventABI().CreateFilterInput();
                 var addLiquidityFilterInput = Event<AddLiquidityDTO>.GetEventABI().CreateFilterInput();
                 var subscription = new EthLogsObservableSubscription(client);
@@ -43,28 +43,21 @@ namespace FDex.Application.Services
                         {
                             Console.WriteLine("[DEV-INF] Decoding a swap event ...");
                             await StoreSwapEventAsync(decodedSwap);
-                            User user = new()
-                            {
-                                Wallet = decodedSwap.Event.Wallet,
-                                CreatedDate = DateTime.Now
-                            };
-
-                            var foundUser = await _unitOfWork.UserRepository.FindAsync(user.Wallet);
-                            if (foundUser == null)
-                            {
-                                await _unitOfWork.UserRepository.AddAsync(user);
-                                await _unitOfWork.Save();
-                            }
-
+                            await StoreUserAsync(decodedSwap.Event.Wallet);
+                        }
+                        else if (decodedAddLiquidity != null)
+                        {
+                            Console.WriteLine("[DEV-INF] Decoding an add liquidity event ...");
+                            await StoreUserAsync(decodedAddLiquidity.Event.Wallet);
                         }
                         else
                         {
-                            Console.WriteLine("[DEV-INF] Found not standard swap log");
+                            Console.WriteLine("[DEV-INF] Found not standard event log");
                         }
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine("[DEV-INF] Log Address: " + log.Address + " is not a standard swap log:", ex.Message);
+                        Console.WriteLine("[DEV-ERR] Log Address: " + log.Address + " is not a standard swap log:", ex.Message);
                     }
                 });
                 try
@@ -77,19 +70,36 @@ namespace FDex.Application.Services
                         if (client.WebSocketState == System.Net.WebSockets.WebSocketState.Aborted)
                         {
                             //restart client
-                            Console.WriteLine("[DEV-INF] Clien aborted, restarting ...");
+                            Console.WriteLine("[DEV-INF] Client aborted, restarting ...");
+
                             await subscription.UnsubscribeAsync();
                             await client.StopAsync();
                             await client.StartAsync();
                             await subscription.SubscribeAsync(swapFilterInput);
+
                         }
                         await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[DEV-INF] WebSocket error: {ex.Message}");
+                    Console.WriteLine($"[DEV-ERR] WebSocket error: {ex.Message}");
                 }
+            }
+        }
+
+        private async Task StoreUserAsync(string wallet)
+        {
+            var foundUser = await _unitOfWork.UserRepository.FindAsync(wallet);
+            if (foundUser == null)
+            {
+                User user = new()
+                {
+                    Wallet = wallet,
+                    CreatedDate = DateTime.Now
+                };
+                await _unitOfWork.UserRepository.AddAsync(user);
+                await _unitOfWork.Save();
             }
         }
 

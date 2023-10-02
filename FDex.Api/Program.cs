@@ -13,6 +13,7 @@ internal class Program
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.
+        builder.Services.AddHealthChecks();
         builder.Services.AddHttpContextAccessor();
         builder.Services.ConfigurePersistenceServices(builder.Configuration);
         builder.Services.ConfigureApplicationServices();
@@ -50,6 +51,8 @@ internal class Program
         app.UseCors("CorsPolicy");
 
         app.MapControllers();
+
+        app.MapHealthChecks("/healthz");
 
         app.Run();
     }
