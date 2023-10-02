@@ -5,12 +5,9 @@ services:
     build:
       context: .
       dockerfile: FDex.Api/Dockerfile
-    depends_on:
-      - sql.server
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - Logging__LogLevel__Default=Information
     ports:
       - 5000:80
-    networks:
-      - vps
+   
