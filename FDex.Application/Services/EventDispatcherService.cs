@@ -31,7 +31,7 @@ namespace FDex.Application.Services
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                using StreamingWebSocketClient client = new("wss://bsc-testnet.publicnode.com");
+                StreamingWebSocketClient client = new("wss://bsc-testnet.publicnode.com");
                 NewFilterInput swapFilterInput = Event<SwapDTO>.GetEventABI().CreateFilterInput();
                 NewFilterInput addLiquidityFilterInput = Event<AddLiquidityDTO>.GetEventABI().CreateFilterInput();
                 NewFilterInput reporterAddedFilterInput = Event<ReporterAddedDTO>.GetEventABI().CreateFilterInput();

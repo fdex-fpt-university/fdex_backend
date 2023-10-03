@@ -22,6 +22,10 @@ internal class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
         builder.Services.AddHostedService<EventDispatcherService>();
+        builder.Services.Configure<HostOptions>(options =>
+        {
+            options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
+        });
         builder.Services.AddCors(c =>
         {
             c.AddPolicy("CorsPolicy",
