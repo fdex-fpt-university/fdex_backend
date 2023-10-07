@@ -1,6 +1,7 @@
 ﻿using System;
 using FDex.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace FDex.Persistence.DbContexts
 {

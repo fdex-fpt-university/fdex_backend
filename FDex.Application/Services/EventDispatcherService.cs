@@ -20,72 +20,84 @@ namespace FDex.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly List<string> _wss;
+        private int currentWssIndex;
 
         public EventDispatcherService(IUnitOfWork unitOfWork, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _wss = new()
+            {
+                "wss://bsc-testnet.publicnode.com",
+                "wss://bsc.getblock.io/c9c2311d-f632-47b1-ae8f-7cde9cd02fba/testnet/",
+                "wss://bsc.getblock.io/034447a0-2d47-427d-a049-27bca272aeb0/testnet/",
+                "wss://bsc-testnet.public.blastapi.io",
+                "wss://sly-long-cherry.bsc-testnet.quiknode.pro/4ac0090884736ecd32a595fe2ec55910ca239cdb/"
+
+            };
+            currentWssIndex = 0;
         }
 
         protected async override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                StreamingWebSocketClient client = new("wss://bsc-testnet.publicnode.com");
-                NewFilterInput swapFilterInput = Event<SwapDTO>.GetEventABI().CreateFilterInput();
-                NewFilterInput addLiquidityFilterInput = Event<AddLiquidityDTO>.GetEventABI().CreateFilterInput();
-                NewFilterInput reporterAddedFilterInput = Event<ReporterAddedDTO>.GetEventABI().CreateFilterInput();
-                NewFilterInput reporterRemovedFilterInput = Event<ReporterRemovedDTO>.GetEventABI().CreateFilterInput();
-                NewFilterInput reporterPostedFilterInput = Event<ReporterPostedDTO>.GetEventABI().CreateFilterInput();
-                EthLogsObservableSubscription subscription = new(client);
-                var sub = subscription.GetSubscriptionDataResponsesAsObservable();
-                sub.Subscribe(async log =>
-                {
-                    try
-                    {
-                        var decodedSwap = Event<SwapDTO>.DecodeEvent(log);
-                        var decodedAddLiquidity = Event<AddLiquidityDTO>.DecodeEvent(log);
-                        var decodedReporterAdded = Event<ReporterAddedDTO>.DecodeEvent(log);
-                        var decodedReporterRemoved = Event<ReporterRemovedDTO>.DecodeEvent(log);
-                        var decodedReporterPosted = Event<ReporterPostedDTO>.DecodeEvent(log);
-                        if (decodedSwap != null)
-                        {
-                            Console.WriteLine("[DEV-INF] Decoding a swap event ...");
-                            await StoreSwapEventAsync(decodedSwap);
-                            await StoreUserAsync(decodedSwap.Event.Wallet);
-                        }
-                        else if (decodedAddLiquidity != null)
-                        {
-                            Console.WriteLine("[DEV-INF] Decoding an add liquidity event ...");
-                            await StoreUserAsync(decodedAddLiquidity.Event.Wallet);
-                        }
-                        else if (decodedReporterAdded != null)
-                        {
-                            Console.WriteLine("[DEV-INF] Decoding an reporter added event ...");
-                            await HandleReporterEvent(decodedReporterAdded.Event.Wallet, ReporterEventType.Added);
-                        }
-                        else if (decodedReporterRemoved != null)
-                        {
-                            Console.WriteLine("[DEV-INF] Decoding an reporter removed event ...");
-                            await HandleReporterEvent(decodedReporterRemoved.Event.Wallet, ReporterEventType.Removed);
-                        }
-                        else if (decodedReporterPosted != null)
-                        {
-                            Console.WriteLine("[DEV-INF] Decoding an reporter posted event ...");
-                            await HandleReporterEvent(decodedReporterPosted.Event.Wallet, ReporterEventType.Posted);
-                        }
-                        else
-                        {
-                            Console.WriteLine("[DEV-INF] Found not standard event log");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("[DEV-ERR] Log Address: " + log.Address + " is not a standard swap log:", ex.Message);
-                    }
-                });
                 try
                 {
+                    StreamingWebSocketClient client = new(HandleWebsocketString());
+                    NewFilterInput swapFilterInput = Event<SwapDTO>.GetEventABI().CreateFilterInput();
+                    NewFilterInput addLiquidityFilterInput = Event<AddLiquidityDTO>.GetEventABI().CreateFilterInput();
+                    NewFilterInput reporterAddedFilterInput = Event<ReporterAddedDTO>.GetEventABI().CreateFilterInput();
+                    NewFilterInput reporterRemovedFilterInput = Event<ReporterRemovedDTO>.GetEventABI().CreateFilterInput();
+                    NewFilterInput reporterPostedFilterInput = Event<ReporterPostedDTO>.GetEventABI().CreateFilterInput();
+                    EthLogsObservableSubscription subscription = new(client);
+                    var sub = subscription.GetSubscriptionDataResponsesAsObservable();
+                    sub.Subscribe(async log =>
+                    {
+                        try
+                        {
+                            var decodedSwap = Event<SwapDTO>.DecodeEvent(log);
+                            var decodedAddLiquidity = Event<AddLiquidityDTO>.DecodeEvent(log);
+                            var decodedReporterAdded = Event<ReporterAddedDTO>.DecodeEvent(log);
+                            var decodedReporterRemoved = Event<ReporterRemovedDTO>.DecodeEvent(log);
+                            var decodedReporterPosted = Event<ReporterPostedDTO>.DecodeEvent(log);
+                            if (decodedSwap != null)
+                            {
+                                Console.WriteLine("[DEV-INF] Decoding a swap event ...");
+                                await StoreSwapEventAsync(decodedSwap);
+                                await StoreUserAsync(decodedSwap.Event.Wallet);
+                            }
+                            else if (decodedAddLiquidity != null)
+                            {
+                                Console.WriteLine("[DEV-INF] Decoding an add liquidity event ...");
+                                await StoreUserAsync(decodedAddLiquidity.Event.Wallet);
+                            }
+                            else if (decodedReporterAdded != null)
+                            {
+                                Console.WriteLine("[DEV-INF] Decoding an reporter added event ...");
+                                await HandleReporterEvent(decodedReporterAdded.Event.Wallet, ReporterEventType.Added);
+                            }
+                            else if (decodedReporterRemoved != null)
+                            {
+                                Console.WriteLine("[DEV-INF] Decoding an reporter removed event ...");
+                                await HandleReporterEvent(decodedReporterRemoved.Event.Wallet, ReporterEventType.Removed);
+                            }
+                            else if (decodedReporterPosted != null)
+                            {
+                                Console.WriteLine("[DEV-INF] Decoding an reporter posted event ...");
+                                await HandleReporterEvent(decodedReporterPosted.Event.Wallet, ReporterEventType.Posted);
+                            }
+                            else
+                            {
+                                Console.WriteLine("[DEV-INF] Found not standard event log");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("[DEV-ERR] Log Address: " + log.Address + " is not a standard swap log:", ex.Message);
+                        }
+                    });
                     await client.StartAsync();
                     await subscription.SubscribeAsync(swapFilterInput);
                     while (true)
@@ -99,16 +111,22 @@ namespace FDex.Application.Services
                             await client.StopAsync();
                             await client.StartAsync();
                             await subscription.SubscribeAsync(swapFilterInput);
-
                         }
                         await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[DEV-ERR] WebSocket error: {ex.Message}");
+                    Console.WriteLine($"[DEV-ERR] WebSocket error: {ex.Message}, switching ...");
                 }
             }
+        }
+
+        private string HandleWebsocketString()
+        {
+            string wss = _wss[currentWssIndex];
+            currentWssIndex = (currentWssIndex + 1) % _wss.Count;
+            return wss;
         }
 
         private async Task HandleReporterEvent(string wallet, ReporterEventType reporterEvent)
