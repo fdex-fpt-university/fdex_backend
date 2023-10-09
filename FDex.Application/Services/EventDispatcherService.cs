@@ -72,6 +72,7 @@ namespace FDex.Application.Services
                             {
                                 Console.WriteLine("[DEV-INF] Decoding an add liquidity event ...");
                                 await StoreUserAsync(decodedAddLiquidity.Event.Wallet);
+                                await StoreAddLiquidityEvent(decodedAddLiquidity);
                             }
                             else if (decodedReporterAdded != null)
                             {
@@ -120,6 +121,22 @@ namespace FDex.Application.Services
                     Console.WriteLine($"[DEV-ERR] WebSocket error: {ex.Message}, switching ...");
                 }
             }
+        }
+
+        private async Task StoreAddLiquidityEvent(EventLog<AddLiquidityDTO> decodedAddLiquidity)
+        {
+            AddLiquidityDTOAdd addLiquidityDTOAdd = new()
+            {
+                TxnHash = decodedAddLiquidity.Log.TransactionHash,
+                Wallet = decodedAddLiquidity.Event.Wallet,
+                Asset = decodedAddLiquidity.Event.Asset,
+                Amount = decodedAddLiquidity.Event.Amount,
+                Fee = decodedAddLiquidity.Event.Fee * decodedAddLiquidity.Event.MarkPriceIn,
+                DateAdded = DateTime.Now
+            };
+            AddLiquidity addLiquidity = _mapper.Map<AddLiquidity>(addLiquidityDTOAdd);
+            await _unitOfWork.AddLiquidityRepository.AddAsync(addLiquidity);
+            await _unitOfWork.Save();
         }
 
         private string HandleWebsocketString()
@@ -175,7 +192,8 @@ namespace FDex.Application.Services
                 TokenOut = decodedSwap.Event.TokenOut,
                 AmountIn = decodedSwap.Event.AmountIn,
                 AmountOut = decodedSwap.Event.AmountOut,
-                Fee = decodedSwap.Event.Fee * decodedSwap.Event.MarkPrice
+                Fee = decodedSwap.Event.Fee * decodedSwap.Event.MarkPrice,
+                Time = DateTime.Now
             };
             Swap swap = _mapper.Map<Swap>(swapDTOAdd);
             await _unitOfWork.SwapRepository.AddAsync(swap);
