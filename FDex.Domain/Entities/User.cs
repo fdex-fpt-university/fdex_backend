@@ -5,8 +5,10 @@ namespace FDex.Domain.Entities
 	public class User
 	{
         public string Wallet { get; set; }
-        public string? ReferralCode { get; set; }
         public string? ReferredUserOf { get; set; }
+        public int? TradePoint { get; set; }
+        public int? ReferralPoint { get; set; }
+        public int? Level { get; set; }
         public DateTime CreatedDate { get; set; }
 
         public ICollection<Swap>? Swaps { get; set; }

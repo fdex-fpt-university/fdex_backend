@@ -151,7 +151,7 @@ namespace FDex.Application.Services
             switch (reporterEvent)
             {
                 case ReporterEventType.Added:
-                    await _unitOfWork.ReporterRepository.AddAsync(new Reporter { Wallet = wallet });
+                    await _unitOfWork.ReporterRepository.AddAsync(new Reporter { Wallet = wallet, ReportCount = 0 });
                     break;
                 case ReporterEventType.Removed:
                     Reporter removingReporter = await _unitOfWork.ReporterRepository.FindAsync(wallet);

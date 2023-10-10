@@ -10,11 +10,13 @@
     <None Remove="Repositories\" />
     <None Remove="DbContexts\" />
     <None Remove="Common\" />
+    <None Remove="Triggers\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Repositories\" />
     <Folder Include="DbContexts\" />
     <Folder Include="Common\" />
+    <Folder Include="Triggers\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FDex.Application\FDex.Application.csproj" />
