@@ -6,6 +6,7 @@ using FDex.Application.DTOs.Reporter;
 using FDex.Application.DTOs.Swap;
 using FDex.Application.Enumerations;
 using FDex.Domain.Entities;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Nethereum.Contracts;
 using Nethereum.JsonRpc.Client;
@@ -18,14 +19,14 @@ namespace FDex.Application.Services
 {
     public class EventDispatcherService : BackgroundService
     {
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IServiceProvider _serviceProvider;
         private readonly IMapper _mapper;
         private readonly List<string> _wss;
         private int currentWssIndex;
 
-        public EventDispatcherService(IUnitOfWork unitOfWork, IMapper mapper)
+        public EventDispatcherService(IServiceProvider serviceProvider, IMapper mapper)
         {
-            _unitOfWork = unitOfWork;
+            _serviceProvider = serviceProvider;
             _mapper = mapper;
             _wss = new()
             {
@@ -41,6 +42,8 @@ namespace FDex.Application.Services
 
         protected async override Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            await using var scope = _serviceProvider.CreateAsyncScope();
+            var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
@@ -65,29 +68,90 @@ namespace FDex.Application.Services
                             if (decodedSwap != null)
                             {
                                 Console.WriteLine("[DEV-INF] Decoding a swap event ...");
-                                await StoreSwapEventAsync(decodedSwap);
-                                await StoreUserAsync(decodedSwap.Event.Wallet);
+                                SwapDTOAdd swapDTOAdd = new()
+                                {
+                                    TxnHash = decodedSwap.Log.TransactionHash,
+                                    Wallet = decodedSwap.Event.Wallet,
+                                    TokenIn = decodedSwap.Event.TokenIn,
+                                    TokenOut = decodedSwap.Event.TokenOut,
+                                    AmountIn = decodedSwap.Event.AmountIn,
+                                    AmountOut = decodedSwap.Event.AmountOut,
+                                    Fee = decodedSwap.Event.Fee * decodedSwap.Event.MarkPrice,
+                                    Time = DateTime.Now
+                                };
+                                Swap swap = _mapper.Map<Swap>(swapDTOAdd);
+                                await _unitOfWork.SwapRepository.AddAsync(swap);
+                                var foundUser = await _unitOfWork.UserRepository.FindAsync(decodedSwap.Event.Wallet);
+                                if (foundUser == null)
+                                {
+                                    User user = new()
+                                    {
+                                        Wallet = decodedSwap.Event.Wallet,
+                                        CreatedDate = DateTime.Now
+                                    };
+                                    await _unitOfWork.UserRepository.AddAsync(user);
+                                }
+                                await _unitOfWork.SaveAsync();
                             }
                             else if (decodedAddLiquidity != null)
                             {
                                 Console.WriteLine("[DEV-INF] Decoding an add liquidity event ...");
-                                await StoreUserAsync(decodedAddLiquidity.Event.Wallet);
-                                await StoreAddLiquidityEvent(decodedAddLiquidity);
+                                var foundUser = await _unitOfWork.UserRepository.FindAsync(decodedAddLiquidity.Event.Wallet);
+                                if (foundUser == null)
+                                {
+                                    User user = new()
+                                    {
+                                        Wallet = decodedAddLiquidity.Event.Wallet,
+                                        CreatedDate = DateTime.Now
+                                    };
+                                    await _unitOfWork.UserRepository.AddAsync(user);
+                                    await _unitOfWork.SaveAsync();
+                                }
+                                AddLiquidityDTOAdd addLiquidityDTOAdd = new()
+                                {
+                                    TxnHash = decodedAddLiquidity.Log.TransactionHash,
+                                    Wallet = decodedAddLiquidity.Event.Wallet,
+                                    Asset = decodedAddLiquidity.Event.Asset,
+                                    Amount = decodedAddLiquidity.Event.Amount,
+                                    Fee = decodedAddLiquidity.Event.Fee * decodedAddLiquidity.Event.MarkPriceIn,
+                                    DateAdded = DateTime.Now
+                                };
+                                AddLiquidity addLiquidity = _mapper.Map<AddLiquidity>(addLiquidityDTOAdd);
+                                await _unitOfWork.AddLiquidityRepository.AddAsync(addLiquidity);
+                                await _unitOfWork.SaveAsync();
                             }
                             else if (decodedReporterAdded != null)
                             {
                                 Console.WriteLine("[DEV-INF] Decoding an reporter added event ...");
-                                await HandleReporterEvent(decodedReporterAdded.Event.Wallet, ReporterEventType.Added);
+                                var foundReporterAdded = await _unitOfWork.ReporterRepository.FindAsync(decodedReporterAdded.Event.Wallet);
+                                if (foundReporterAdded == null)
+                                {
+                                    await _unitOfWork.ReporterRepository.AddAsync(new Reporter { Wallet = decodedReporterAdded.Event.Wallet, ReportCount = 0 });
+                                }
+                                await _unitOfWork.SaveAsync();
                             }
                             else if (decodedReporterRemoved != null)
                             {
                                 Console.WriteLine("[DEV-INF] Decoding an reporter removed event ...");
-                                await HandleReporterEvent(decodedReporterRemoved.Event.Wallet, ReporterEventType.Removed);
+                                var foundReporterRemoved = await _unitOfWork.ReporterRepository.FindAsync(decodedReporterRemoved.Event.Wallet);
+                                if (foundReporterRemoved != null)
+                                {
+                                    _unitOfWork.ReporterRepository.Remove(foundReporterRemoved);
+                                }
+                                await _unitOfWork.SaveAsync();
                             }
                             else if (decodedReporterPosted != null)
                             {
                                 Console.WriteLine("[DEV-INF] Decoding an reporter posted event ...");
-                                await HandleReporterEvent(decodedReporterPosted.Event.Wallet, ReporterEventType.Posted);
+                                var foundReporterPosted = await _unitOfWork.ReporterRepository.FindAsync(decodedReporterPosted.Event.Wallet);
+                                if (foundReporterPosted != null)
+                                {
+                                    Reporter postingReporter = await _unitOfWork.ReporterRepository.FindAsync(decodedReporterPosted.Event.Wallet);
+                                    postingReporter.ReportCount += 1;
+                                    postingReporter.LastReportedDate = DateTime.Now;
+                                    _unitOfWork.ReporterRepository.Update(postingReporter);
+                                }
+                                await _unitOfWork.SaveAsync();
                             }
                             else
                             {
@@ -123,92 +187,11 @@ namespace FDex.Application.Services
             }
         }
 
-        private async Task StoreAddLiquidityEvent(EventLog<AddLiquidityDTO> decodedAddLiquidity)
-        {
-            AddLiquidityDTOAdd addLiquidityDTOAdd = new()
-            {
-                TxnHash = decodedAddLiquidity.Log.TransactionHash,
-                Wallet = decodedAddLiquidity.Event.Wallet,
-                Asset = decodedAddLiquidity.Event.Asset,
-                Amount = decodedAddLiquidity.Event.Amount,
-                Fee = decodedAddLiquidity.Event.Fee * decodedAddLiquidity.Event.MarkPriceIn,
-                DateAdded = DateTime.Now
-            };
-            AddLiquidity addLiquidity = _mapper.Map<AddLiquidity>(addLiquidityDTOAdd);
-            await _unitOfWork.AddLiquidityRepository.AddAsync(addLiquidity);
-            await _unitOfWork.SaveAsync();
-        }
-
         private string HandleWebsocketString()
         {
             string wss = _wss[currentWssIndex];
             currentWssIndex = (currentWssIndex + 1) % _wss.Count;
             return wss;
-        }
-
-        private async Task HandleReporterEvent(string wallet, ReporterEventType reporterEvent)
-        {
-            switch (reporterEvent)
-            {
-                case ReporterEventType.Added:
-                    var foundReporterAdded = await _unitOfWork.ReporterRepository.FindAsync(wallet);
-                    if (foundReporterAdded == null)
-                    {
-                        await _unitOfWork.ReporterRepository.AddAsync(new Reporter { Wallet = wallet, ReportCount = 0 });
-                    }
-                    break;
-                case ReporterEventType.Removed:
-                    var foundReporterRemoved = await _unitOfWork.ReporterRepository.FindAsync(wallet);
-                    if (foundReporterRemoved != null)
-                    {
-                        _unitOfWork.ReporterRepository.Remove(foundReporterRemoved);
-                    }
-                    break;
-                case ReporterEventType.Posted:
-                    var foundReporterPosted = await _unitOfWork.ReporterRepository.FindAsync(wallet);
-                    if (foundReporterPosted != null)
-                    {
-                        Reporter postingReporter = await _unitOfWork.ReporterRepository.FindAsync(wallet);
-                        postingReporter.ReportCount += 1;
-                        postingReporter.LastReportedDate = DateTime.Now;
-                        _unitOfWork.ReporterRepository.Update(postingReporter);
-                    }
-                    break;
-            }
-            await _unitOfWork.SaveAsync();
-        }
-
-        private async Task StoreUserAsync(string wallet)
-        {
-            var foundUser = await _unitOfWork.UserRepository.FindAsync(wallet);
-            if (foundUser == null)
-            {
-                User user = new()
-                {
-                    Wallet = wallet,
-                    CreatedDate = DateTime.Now
-                };
-                await _unitOfWork.UserRepository.AddAsync(user);
-                await _unitOfWork.SaveAsync();
-            }
-        }
-
-        private async Task StoreSwapEventAsync(EventLog<SwapDTO> decodedSwap)
-        {
-            SwapDTOAdd swapDTOAdd = new()
-            {
-                TxnHash = decodedSwap.Log.TransactionHash,
-                Wallet = decodedSwap.Event.Wallet,
-                TokenIn = decodedSwap.Event.TokenIn,
-                TokenOut = decodedSwap.Event.TokenOut,
-                AmountIn = decodedSwap.Event.AmountIn,
-                AmountOut = decodedSwap.Event.AmountOut,
-                Fee = decodedSwap.Event.Fee * decodedSwap.Event.MarkPrice,
-                Time = DateTime.Now
-            };
-            Swap swap = _mapper.Map<Swap>(swapDTOAdd);
-            await _unitOfWork.SwapRepository.AddAsync(swap);
-            await _unitOfWork.SaveAsync();
         }
     }
 }

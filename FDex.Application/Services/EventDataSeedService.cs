@@ -7,7 +7,9 @@ using FDex.Application.DTOs.Reporter;
 using FDex.Application.DTOs.Swap;
 using FDex.Application.Enumerations;
 using FDex.Domain.Entities;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using NBitcoin.Secp256k1;
 using Nethereum.Contracts;
 using Nethereum.Hex.HexTypes;
 using Nethereum.JsonRpc.Client;
@@ -19,7 +21,7 @@ namespace FDex.Application.Services
 {
     public class EventDataSeedService : BackgroundService
     {
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IServiceProvider _serviceProvider;
         private readonly IMapper _mapper;
         private readonly Web3 _web3;
 
@@ -28,9 +30,9 @@ namespace FDex.Application.Services
         private static BigInteger _limitBlockNumber = 9999;
         const string RPC_URL = "https://sly-long-cherry.bsc-testnet.quiknode.pro/4ac0090884736ecd32a595fe2ec55910ca239cdb/";
 
-        public EventDataSeedService(IUnitOfWork unitOfWork, IMapper mapper)
+        public EventDataSeedService(IMapper mapper, IServiceProvider serviceProvider)
         {
-            _unitOfWork = unitOfWork;
+            _serviceProvider = serviceProvider;
             _mapper = mapper;
             ClientBase.ConnectionTimeout = TimeSpan.FromDays(1);
             _web3 = new(RPC_URL);
@@ -38,6 +40,8 @@ namespace FDex.Application.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            await using var scope = _serviceProvider.CreateAsyncScope();
+            var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             var latestBlockNumber = await _web3.Eth.Blocks.GetBlockNumber.SendRequestAsync();
             var poolAddress = "0x006Df49bde510578dE88b75AEe4754cc86bFAFD0";
             var oracleAddress = "0x1E16D408a6ae4E2a867cd33F15cb7E17441139c1";
@@ -128,16 +132,35 @@ namespace FDex.Application.Services
 
                 foreach (var log in reporterAddedEvents)
                 {
-                    await HandleReporterEvent(log.Event.Wallet, ReporterEventType.Added);
+                    var foundReporterAdded = await _unitOfWork.ReporterRepository.FindAsync(log.Event.Wallet);
+                    if (foundReporterAdded == null)
+                    {
+                        await _unitOfWork.ReporterRepository.AddAsync(new Reporter { Wallet = log.Event.Wallet, ReportCount = 0 });
+                    }
+                    await _unitOfWork.SaveAsync();
                 }
                 foreach (var log in reporterRemovedEvents)
                 {
-                    await HandleReporterEvent(log.Event.Wallet, ReporterEventType.Removed);
+                    var foundReporterRemoved = await _unitOfWork.ReporterRepository.FindAsync(log.Event.Wallet);
+                    if (foundReporterRemoved != null)
+                    {
+                        _unitOfWork.ReporterRepository.Remove(foundReporterRemoved);
+                    }
+                    await _unitOfWork.SaveAsync();
                 }
                 foreach (var log in reporterPostedEvents)
                 {
-                    await HandleReporterEvent(log.Event.Wallet, ReporterEventType.Posted);
+                    var foundReporterPosted = await _unitOfWork.ReporterRepository.FindAsync(log.Event.Wallet);
+                    if (foundReporterPosted != null)
+                    {
+                        Reporter postingReporter = await _unitOfWork.ReporterRepository.FindAsync(log.Event.Wallet);
+                        postingReporter.ReportCount += 1;
+                        postingReporter.LastReportedDate = DateTime.Now;
+                        _unitOfWork.ReporterRepository.Update(postingReporter);
+                    }
+                    await _unitOfWork.SaveAsync();
                 }
+                
             }
         }
 
@@ -151,38 +174,6 @@ namespace FDex.Application.Services
             }
             _currentBlockNumber += _limitBlockNumber;
             return new BlockParameter(new HexBigInteger(_currentBlockNumber));
-        }
-
-        private async Task HandleReporterEvent(string wallet, ReporterEventType reporterEvent)
-        {
-            switch (reporterEvent)
-            {
-                case ReporterEventType.Added:
-                    var foundReporterAdded = await _unitOfWork.ReporterRepository.FindAsync(wallet);
-                    if (foundReporterAdded == null)
-                    {
-                        await _unitOfWork.ReporterRepository.AddAsync(new Reporter { Wallet = wallet, ReportCount = 0 });
-                    }
-                    break;
-                case ReporterEventType.Removed:
-                    var foundReporterRemoved = await _unitOfWork.ReporterRepository.FindAsync(wallet);
-                    if (foundReporterRemoved != null)
-                    {
-                        _unitOfWork.ReporterRepository.Remove(foundReporterRemoved);
-                    }
-                    break;
-                case ReporterEventType.Posted:
-                    var foundReporterPosted = await _unitOfWork.ReporterRepository.FindAsync(wallet);
-                    if (foundReporterPosted != null)
-                    {
-                        Reporter postingReporter = await _unitOfWork.ReporterRepository.FindAsync(wallet);
-                        postingReporter.ReportCount += 1;
-                        postingReporter.LastReportedDate = DateTime.Now;
-                        _unitOfWork.ReporterRepository.Update(postingReporter);
-                    }
-                    break;
-            }
-            await _unitOfWork.SaveAsync();
         }
     }
 }
