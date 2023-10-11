@@ -93,7 +93,7 @@ namespace FDex.Application.Services
                         Swap swap = _mapper.Map<Swap>(rawSwap);
                         await _unitOfWork.SwapRepository.AddAsync(swap);
                     }
-                    await _unitOfWork.Save();
+                    await _unitOfWork.SaveAsync();
                 }
 
                 foreach (var log in addLiquidityEvents)
@@ -123,7 +123,7 @@ namespace FDex.Application.Services
                         AddLiquidity addLiquidity = _mapper.Map<AddLiquidity>(rawAddLiquidity);
                         await _unitOfWork.AddLiquidityRepository.AddAsync(addLiquidity);
                     }
-                    await _unitOfWork.Save();
+                    await _unitOfWork.SaveAsync();
                 }
 
                 foreach (var log in reporterAddedEvents)
@@ -173,7 +173,7 @@ namespace FDex.Application.Services
                     break;
                 case ReporterEventType.Posted:
                     var foundReporterPosted = await _unitOfWork.ReporterRepository.FindAsync(wallet);
-                    if (foundReporterPosted == null)
+                    if (foundReporterPosted != null)
                     {
                         Reporter postingReporter = await _unitOfWork.ReporterRepository.FindAsync(wallet);
                         postingReporter.ReportCount += 1;
@@ -182,7 +182,7 @@ namespace FDex.Application.Services
                     }
                     break;
             }
-            await _unitOfWork.Save();
+            await _unitOfWork.SaveAsync();
         }
     }
 }
