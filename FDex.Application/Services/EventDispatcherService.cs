@@ -42,10 +42,10 @@ namespace FDex.Application.Services
 
         protected async override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            await using var scope = _serviceProvider.CreateAsyncScope();
-            var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             while (!stoppingToken.IsCancellationRequested)
             {
+                await using var scope = _serviceProvider.CreateAsyncScope();
+                var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                 try
                 {
                     StreamingWebSocketClient client = new(HandleWebsocketString());
@@ -168,10 +168,10 @@ namespace FDex.Application.Services
                     while (true)
                     {
                         Console.WriteLine("[DEV-INF] Client state: " + client.WebSocketState);
-                        if (client.WebSocketState == System.Net.WebSockets.WebSocketState.Aborted)
+                        if (client.WebSocketState == System.Net.WebSockets.WebSocketState.Aborted || client.WebSocketState == System.Net.WebSockets.WebSocketState.Closed)
                         {
                             //restart client
-                            Console.WriteLine("[DEV-INF] Client aborted, restarting ...");
+                            Console.WriteLine($"[DEV-INF] Client {client.WebSocketState}, restarting ...");
                             await subscription.UnsubscribeAsync();
                             await client.StopAsync();
                             await client.StartAsync();

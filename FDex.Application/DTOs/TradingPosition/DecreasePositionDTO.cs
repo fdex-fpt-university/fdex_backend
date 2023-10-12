@@ -1,6 +1,6 @@
 ﻿using System;
 namespace FDex.Application.DTOs.TradingPosition
 {
-	public class DecreasePositionDTO : DecreasePositionDTOBase { }
+	public partial class DecreasePositionDTO : DecreasePositionDTOBase { }
 }
 

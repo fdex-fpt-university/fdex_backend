@@ -9,7 +9,6 @@ using FDex.Application.Enumerations;
 using FDex.Domain.Entities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using NBitcoin.Secp256k1;
 using Nethereum.Contracts;
 using Nethereum.Hex.HexTypes;
 using Nethereum.JsonRpc.Client;
@@ -27,7 +26,7 @@ namespace FDex.Application.Services
 
         bool isFirstParam = true;
         private static BigInteger _currentBlockNumber = 34002213;
-        private static BigInteger _limitBlockNumber = 9999;
+        private static BigInteger _limitBlockNumber = 9;
         const string RPC_URL = "https://sly-long-cherry.bsc-testnet.quiknode.pro/4ac0090884736ecd32a595fe2ec55910ca239cdb/";
 
         public EventDataSeedService(IMapper mapper, IServiceProvider serviceProvider)
