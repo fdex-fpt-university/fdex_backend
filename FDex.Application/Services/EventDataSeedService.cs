@@ -5,6 +5,7 @@ using FDex.Application.Contracts.Persistence;
 using FDex.Application.DTOs.Liquidity;
 using FDex.Application.DTOs.Reporter;
 using FDex.Application.DTOs.Swap;
+using FDex.Application.DTOs.TradingPosition;
 using FDex.Application.Enumerations;
 using FDex.Domain.Entities;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,7 +26,7 @@ namespace FDex.Application.Services
         private readonly Web3 _web3;
 
         bool isFirstParam = true;
-        private static BigInteger _currentBlockNumber = 34002213;
+        private static BigInteger _currentBlockNumber = 34115291;
         private static BigInteger _limitBlockNumber = 9;
         const string RPC_URL = "https://sly-long-cherry.bsc-testnet.quiknode.pro/4ac0090884736ecd32a595fe2ec55910ca239cdb/";
 
@@ -42,8 +43,13 @@ namespace FDex.Application.Services
             await using var scope = _serviceProvider.CreateAsyncScope();
             var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             var latestBlockNumber = await _web3.Eth.Blocks.GetBlockNumber.SendRequestAsync();
-            var poolAddress = "0x006Df49bde510578dE88b75AEe4754cc86bFAFD0";
+            var poolAddress = "0x9Fca52B0E21AdfF52563D179b1593149109593b5";
             var oracleAddress = "0x1E16D408a6ae4E2a867cd33F15cb7E17441139c1";
+            var increasePositionEventHandler = _web3.Eth.GetEvent<IncreasePositionDTO>(poolAddress);
+            var decreasePositionEventHandler = _web3.Eth.GetEvent<DecreasePositionDTO>(poolAddress);
+            var updatePositionEventHandler = _web3.Eth.GetEvent<UpdatePositionDTO>(poolAddress);
+            var closePositionEventHandler = _web3.Eth.GetEvent<ClosePositionDTO>(poolAddress);
+            var liquidatePositionEventHandler = _web3.Eth.GetEvent<LiquidatePositionDTO>(poolAddress);
             var swapEventHandler = _web3.Eth.GetEvent<SwapDTO>(poolAddress);
             var addLiquidityEventHandler = _web3.Eth.GetEvent<AddLiquidityDTO>(poolAddress);
             var reporterAddedEventHandler = _web3.Eth.GetEvent<ReporterAddedDTO>(oracleAddress);
@@ -59,12 +65,24 @@ namespace FDex.Application.Services
                 var filterAllReporterAdded = reporterAddedEventHandler.CreateFilterInput(startBlock, endBlock);
                 var filterAllReporterRemoved = reporterRemovedEventHandler.CreateFilterInput(startBlock, endBlock);
                 var filterAllReporterPosted = reporterPostedEventHandler.CreateFilterInput(startBlock, endBlock);
+                var filterAllIncreasePosition = increasePositionEventHandler.CreateFilterInput(startBlock, endBlock);
+                var filterAllDecreasePosition = decreasePositionEventHandler.CreateFilterInput(startBlock, endBlock);
+                var filterAllUpdatePosition = updatePositionEventHandler.CreateFilterInput(startBlock, endBlock);
+                var filterAllClosePosition = closePositionEventHandler.CreateFilterInput(startBlock, endBlock);
+                var filterAllLiquidatePosition = liquidatePositionEventHandler.CreateFilterInput(startBlock, endBlock);
+
 
                 var swapEvents = await swapEventHandler.GetAllChangesAsync(filterAllSwapEvents);
                 var addLiquidityEvents = await addLiquidityEventHandler.GetAllChangesAsync(filterAllAddLiquidity);
                 var reporterAddedEvents = await reporterAddedEventHandler.GetAllChangesAsync(filterAllReporterAdded);
                 var reporterRemovedEvents = await reporterRemovedEventHandler.GetAllChangesAsync(filterAllReporterRemoved);
                 var reporterPostedEvents = await reporterPostedEventHandler.GetAllChangesAsync(filterAllReporterPosted);
+                var increasePositionEvents = await increasePositionEventHandler.GetAllChangesAsync(filterAllIncreasePosition);
+                var decreasePositionEvents = await decreasePositionEventHandler.GetAllChangesAsync(filterAllDecreasePosition);
+                var updatePositionEvents = await updatePositionEventHandler.GetAllChangesAsync(filterAllUpdatePosition);
+                var closePositionEvents = await closePositionEventHandler.GetAllChangesAsync(filterAllClosePosition);
+                var liquidatePositionEvents = await liquidatePositionEventHandler.GetAllChangesAsync(filterAllLiquidatePosition);
+
 
 
                 foreach (var log in swapEvents)

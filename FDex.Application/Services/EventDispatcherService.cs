@@ -4,6 +4,7 @@ using FDex.Application.Contracts.Persistence;
 using FDex.Application.DTOs.Liquidity;
 using FDex.Application.DTOs.Reporter;
 using FDex.Application.DTOs.Swap;
+using FDex.Application.DTOs.TradingPosition;
 using FDex.Application.Enumerations;
 using FDex.Domain.Entities;
 using Microsoft.Extensions.DependencyInjection;
@@ -49,11 +50,18 @@ namespace FDex.Application.Services
                 try
                 {
                     StreamingWebSocketClient client = new(HandleWebsocketString());
+
                     NewFilterInput swapFilterInput = Event<SwapDTO>.GetEventABI().CreateFilterInput();
                     NewFilterInput addLiquidityFilterInput = Event<AddLiquidityDTO>.GetEventABI().CreateFilterInput();
                     NewFilterInput reporterAddedFilterInput = Event<ReporterAddedDTO>.GetEventABI().CreateFilterInput();
                     NewFilterInput reporterRemovedFilterInput = Event<ReporterRemovedDTO>.GetEventABI().CreateFilterInput();
                     NewFilterInput reporterPostedFilterInput = Event<ReporterPostedDTO>.GetEventABI().CreateFilterInput();
+                    NewFilterInput increasePositionFilterInput = Event<IncreasePositionDTO>.GetEventABI().CreateFilterInput();
+                    NewFilterInput decreasePositionFilterInput = Event<IncreasePositionDTO>.GetEventABI().CreateFilterInput();
+                    NewFilterInput updatePositionFilterInput = Event<IncreasePositionDTO>.GetEventABI().CreateFilterInput();
+                    NewFilterInput closePositionFilterInput = Event<IncreasePositionDTO>.GetEventABI().CreateFilterInput();
+                    NewFilterInput liquidatePositionFilterInput = Event<IncreasePositionDTO>.GetEventABI().CreateFilterInput();
+
                     EthLogsObservableSubscription subscription = new(client);
                     var sub = subscription.GetSubscriptionDataResponsesAsObservable();
                     sub.Subscribe(async log =>
@@ -65,6 +73,12 @@ namespace FDex.Application.Services
                             var decodedReporterAdded = Event<ReporterAddedDTO>.DecodeEvent(log);
                             var decodedReporterRemoved = Event<ReporterRemovedDTO>.DecodeEvent(log);
                             var decodedReporterPosted = Event<ReporterPostedDTO>.DecodeEvent(log);
+                            var decodedIncreasePosition = Event<IncreasePositionDTO>.DecodeEvent(log);
+                            var decodedDecreasePosition = Event<DecreasePositionDTO>.DecodeEvent(log);
+                            var decodedUpdatePosition = Event<UpdatePositionDTO>.DecodeEvent(log);
+                            var decodedClosePosition = Event<ClosePositionDTO>.DecodeEvent(log);
+                            var decodedLiquidatePosition = Event<LiquidatePositionDTO>.DecodeEvent(log);
+
                             if (decodedSwap != null)
                             {
                                 Console.WriteLine("[DEV-INF] Decoding a swap event ...");
@@ -122,7 +136,7 @@ namespace FDex.Application.Services
                             }
                             else if (decodedReporterAdded != null)
                             {
-                                Console.WriteLine("[DEV-INF] Decoding an reporter added event ...");
+                                Console.WriteLine("[DEV-INF] Decoding a reporter added event ...");
                                 var foundReporterAdded = await _unitOfWork.ReporterRepository.FindAsync(decodedReporterAdded.Event.Wallet);
                                 if (foundReporterAdded == null)
                                 {
@@ -132,7 +146,7 @@ namespace FDex.Application.Services
                             }
                             else if (decodedReporterRemoved != null)
                             {
-                                Console.WriteLine("[DEV-INF] Decoding an reporter removed event ...");
+                                Console.WriteLine("[DEV-INF] Decoding a reporter removed event ...");
                                 var foundReporterRemoved = await _unitOfWork.ReporterRepository.FindAsync(decodedReporterRemoved.Event.Wallet);
                                 if (foundReporterRemoved != null)
                                 {
@@ -142,7 +156,7 @@ namespace FDex.Application.Services
                             }
                             else if (decodedReporterPosted != null)
                             {
-                                Console.WriteLine("[DEV-INF] Decoding an reporter posted event ...");
+                                Console.WriteLine("[DEV-INF] Decoding a reporter posted event ...");
                                 var foundReporterPosted = await _unitOfWork.ReporterRepository.FindAsync(decodedReporterPosted.Event.Wallet);
                                 if (foundReporterPosted != null)
                                 {
@@ -152,6 +166,26 @@ namespace FDex.Application.Services
                                     _unitOfWork.ReporterRepository.Update(postingReporter);
                                 }
                                 await _unitOfWork.SaveAsync();
+                            }
+                            else if (decodedIncreasePosition != null)
+                            {
+                                Console.WriteLine("[DEV-INF] Decoding a increase position event ...");
+                            }
+                            else if (decodedDecreasePosition != null)
+                            {
+                                Console.WriteLine("[DEV-INF] Decoding a decrease position event ...");
+                            }
+                            else if(decodedUpdatePosition != null)
+                            {
+                                Console.WriteLine("[DEV-INF] Decoding a update position event ...");
+                            }
+                            else if(decodedClosePosition != null)
+                            {
+                                Console.WriteLine("[DEV-INF] Decoding a close position event ...");
+                            }
+                            else if(decodedLiquidatePosition != null)
+                            {
+                                Console.WriteLine("[DEV-INF] Decoding a liquidate event ...");
                             }
                             else
                             {
