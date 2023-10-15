@@ -28,7 +28,7 @@ namespace FDex.Application.Services
         bool isFirstParam = true;
         private static BigInteger _currentBlockNumber = 34115291;
         private static BigInteger _limitBlockNumber = 9999;
-        const string RPC_URL = "https://sly-long-cherry.bsc-testnet.quiknode.pro/4ac0090884736ecd32a595fe2ec55910ca239cdb/";
+        const string RPC_URL = "https://bsc.getblock.io/c9c2311d-f632-47b1-ae8f-7cde9cd02fba/testnet/";
 
         public EventDataSeedService(IMapper mapper, IServiceProvider serviceProvider)
         {

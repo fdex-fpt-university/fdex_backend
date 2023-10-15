@@ -10,11 +10,11 @@ namespace FDex.Domain.Entities
 		public string Wallet { get; set; }
 		public string CollateralToken { get; set; }
 		public string IndexToken { get; set; }
-        public BigInteger CollateralValue { get; set; }
-        public BigInteger SizeChanged { get; set; }
+        public string CollateralValue { get; set; }
+        public string SizeChanged { get; set; }
         public string Side { get; set; }
-        public BigInteger IndexPrice { get; set; }
-        public BigInteger FeeValue { get; set; }
+        public string IndexPrice { get; set; }
+        public string FeeValue { get; set; }
         public DateTime OpenTime { get; set; }
         public DateTime CloseTime { get; set; }
     }

@@ -62,152 +62,203 @@ namespace FDex.Application.Services
                     NewFilterInput closePositionFilterInput = Event<ClosePositionDTO>.GetEventABI().CreateFilterInput();
                     NewFilterInput liquidatePositionFilterInput = Event<LiquidatePositionDTO>.GetEventABI().CreateFilterInput();
 
-                    EthLogsObservableSubscription subscription = new(client);
-                    var sub = subscription.GetSubscriptionDataResponsesAsObservable();
-                    sub.Subscribe(async log =>
-                     {
-                        try
+                    EthLogsObservableSubscription swapSubscription = new(client);
+                    EthLogsObservableSubscription addLiquiditySubscription = new(client);
+                    EthLogsObservableSubscription reporterAddedSubscription = new(client);
+                    EthLogsObservableSubscription reporterRemovedSubscription = new(client);
+                    EthLogsObservableSubscription reporterPostedSubscription = new(client);
+                    EthLogsObservableSubscription increasePositionSubscription = new(client);
+                    EthLogsObservableSubscription decreasePositionSubscription = new(client);
+                    EthLogsObservableSubscription updatePositionSubscription = new(client);
+                    EthLogsObservableSubscription closePositionSubscription = new(client);
+                    EthLogsObservableSubscription liquidatePositionSubscription = new(client);
+                    swapSubscription.GetSubscriptionDataResponsesAsObservable().Subscribe(async log =>
+                    {
+                        var decodedSwap = Event<SwapDTO>.DecodeEvent(log);
+                        if (decodedSwap != null)
                         {
-                            var decodedSwap = Event<SwapDTO>.DecodeEvent(log);
-                            var decodedAddLiquidity = Event<AddLiquidityDTO>.DecodeEvent(log);
-                            var decodedReporterAdded = Event<ReporterAddedDTO>.DecodeEvent(log);
-                            var decodedReporterRemoved = Event<ReporterRemovedDTO>.DecodeEvent(log);
-                            var decodedReporterPosted = Event<ReporterPostedDTO>.DecodeEvent(log);
-                            var decodedIncreasePosition = Event<IncreasePositionDTO>.DecodeEvent(log);
-                            var decodedDecreasePosition = Event<DecreasePositionDTO>.DecodeEvent(log);
-                            var decodedUpdatePosition = Event<UpdatePositionDTO>.DecodeEvent(log);
-                            var decodedClosePosition = Event<ClosePositionDTO>.DecodeEvent(log);
-                            var decodedLiquidatePosition = Event<LiquidatePositionDTO>.DecodeEvent(log);
-
-                            if (decodedSwap != null)
+                            Console.WriteLine("[DEV-INF] Decoding a swap event ...");
+                            SwapDTOAdd swapDTOAdd = new()
                             {
-                                Console.WriteLine("[DEV-INF] Decoding a swap event ...");
-                                SwapDTOAdd swapDTOAdd = new()
+                                TxnHash = decodedSwap.Log.TransactionHash,
+                                Wallet = decodedSwap.Event.Wallet,
+                                TokenIn = decodedSwap.Event.TokenIn,
+                                TokenOut = decodedSwap.Event.TokenOut,
+                                AmountIn = decodedSwap.Event.AmountIn,
+                                AmountOut = decodedSwap.Event.AmountOut,
+                                Fee = decodedSwap.Event.Fee * decodedSwap.Event.MarkPrice,
+                                Time = DateTime.Now
+                            };
+                            Swap swap = _mapper.Map<Swap>(swapDTOAdd);
+                            await _unitOfWork.SwapRepository.AddAsync(swap);
+                            var foundUser = await _unitOfWork.UserRepository.FindAsync(decodedSwap.Event.Wallet);
+                            if (foundUser == null)
+                            {
+                                User user = new()
                                 {
-                                    TxnHash = decodedSwap.Log.TransactionHash,
                                     Wallet = decodedSwap.Event.Wallet,
-                                    TokenIn = decodedSwap.Event.TokenIn,
-                                    TokenOut = decodedSwap.Event.TokenOut,
-                                    AmountIn = decodedSwap.Event.AmountIn,
-                                    AmountOut = decodedSwap.Event.AmountOut,
-                                    Fee = decodedSwap.Event.Fee * decodedSwap.Event.MarkPrice,
-                                    Time = DateTime.Now
+                                    CreatedDate = DateTime.Now
                                 };
-                                Swap swap = _mapper.Map<Swap>(swapDTOAdd);
-                                await _unitOfWork.SwapRepository.AddAsync(swap);
-                                var foundUser = await _unitOfWork.UserRepository.FindAsync(decodedSwap.Event.Wallet);
-                                if (foundUser == null)
-                                {
-                                    User user = new()
-                                    {
-                                        Wallet = decodedSwap.Event.Wallet,
-                                        CreatedDate = DateTime.Now
-                                    };
-                                    await _unitOfWork.UserRepository.AddAsync(user);
-                                }
-                                await _unitOfWork.SaveAsync();
+                                await _unitOfWork.UserRepository.AddAsync(user);
                             }
-                            else if (decodedAddLiquidity != null)
-                            {
-                                Console.WriteLine("[DEV-INF] Decoding an add liquidity event ...");
-                                var foundUser = await _unitOfWork.UserRepository.FindAsync(decodedAddLiquidity.Event.Wallet);
-                                if (foundUser == null)
-                                {
-                                    User user = new()
-                                    {
-                                        Wallet = decodedAddLiquidity.Event.Wallet,
-                                        CreatedDate = DateTime.Now
-                                    };
-                                    await _unitOfWork.UserRepository.AddAsync(user);
-                                    await _unitOfWork.SaveAsync();
-                                }
-                                AddLiquidityDTOAdd addLiquidityDTOAdd = new()
-                                {
-                                    TxnHash = decodedAddLiquidity.Log.TransactionHash,
-                                    Wallet = decodedAddLiquidity.Event.Wallet,
-                                    Asset = decodedAddLiquidity.Event.Asset,
-                                    Amount = decodedAddLiquidity.Event.Amount,
-                                    Fee = decodedAddLiquidity.Event.Fee * decodedAddLiquidity.Event.MarkPriceIn,
-                                    DateAdded = DateTime.Now
-                                };
-                                AddLiquidity addLiquidity = _mapper.Map<AddLiquidity>(addLiquidityDTOAdd);
-                                await _unitOfWork.AddLiquidityRepository.AddAsync(addLiquidity);
-                                await _unitOfWork.SaveAsync();
-                            }
-                            else if (decodedReporterAdded != null)
-                            {
-                                Console.WriteLine("[DEV-INF] Decoding a reporter added event ...");
-                                var foundReporterAdded = await _unitOfWork.ReporterRepository.FindAsync(decodedReporterAdded.Event.Wallet);
-                                if (foundReporterAdded == null)
-                                {
-                                    await _unitOfWork.ReporterRepository.AddAsync(new Reporter { Wallet = decodedReporterAdded.Event.Wallet, ReportCount = 0 });
-                                }
-                                await _unitOfWork.SaveAsync();
-                            }
-                            else if (decodedReporterRemoved != null)
-                            {
-                                Console.WriteLine("[DEV-INF] Decoding a reporter removed event ...");
-                                var foundReporterRemoved = await _unitOfWork.ReporterRepository.FindAsync(decodedReporterRemoved.Event.Wallet);
-                                if (foundReporterRemoved != null)
-                                {
-                                    _unitOfWork.ReporterRepository.Remove(foundReporterRemoved);
-                                }
-                                await _unitOfWork.SaveAsync();
-                            }
-                            else if (decodedReporterPosted != null)
-                            {
-                                Console.WriteLine("[DEV-INF] Decoding a reporter posted event ...");
-                                var foundReporterPosted = await _unitOfWork.ReporterRepository.FindAsync(decodedReporterPosted.Event.Wallet);
-                                if (foundReporterPosted != null)
-                                {
-                                    Reporter postingReporter = await _unitOfWork.ReporterRepository.FindAsync(decodedReporterPosted.Event.Wallet);
-                                    postingReporter.ReportCount += 1;
-                                    postingReporter.LastReportedDate = DateTime.Now;
-                                    _unitOfWork.ReporterRepository.Update(postingReporter);
-                                }
-                                await _unitOfWork.SaveAsync();
-                            }
-                            else if (decodedIncreasePosition != null)
-                            {
-                                Console.WriteLine("[DEV-INF] Decoding an increase position event ...");
-                            }
-                            else if (decodedDecreasePosition != null)
-                            {
-                                Console.WriteLine("[DEV-INF] Decoding a decrease position event ...");
-                            }
-                            else if(decodedUpdatePosition != null)
-                            {
-                                Console.WriteLine("[DEV-INF] Decoding an update position event ...");
-                            }
-                            else if(decodedClosePosition != null)
-                            {
-                                Console.WriteLine("[DEV-INF] Decoding a close position event ...");
-                            }
-                            else if(decodedLiquidatePosition != null)
-                            {
-                                Console.WriteLine("[DEV-INF] Decoding a liquidate event ...");
-                            }
-                            else
-                            {
-                                Console.WriteLine("[DEV-INF] Found not standard event log");
-                            }
+                            await _unitOfWork.SaveAsync();
                         }
-                        catch (Exception ex)
+                        else
                         {
-                            Console.WriteLine("[DEV-ERR] Log Address: " + log.Address + " is not a standard swap log:", ex.Message);
+                            Console.WriteLine("[DEV-INF] Found not standard event log");
                         }
                     });
+
+                    reporterAddedSubscription.GetSubscriptionDataResponsesAsObservable().Subscribe(async log =>
+                    {
+                        Console.WriteLine("[DEV-INF] Decoding a reporter added event ...");
+                        var decodedReporterAdded = Event<ReporterAddedDTO>.DecodeEvent(log);
+                        var foundReporterAdded = await _unitOfWork.ReporterRepository.FindAsync(decodedReporterAdded.Event.Wallet);
+                        if (foundReporterAdded == null)
+                        {
+                            await _unitOfWork.ReporterRepository.AddAsync(new Reporter { Wallet = decodedReporterAdded.Event.Wallet, ReportCount = 0 });
+                        }
+                        await _unitOfWork.SaveAsync();
+                    });
+
+                    reporterRemovedSubscription.GetSubscriptionDataResponsesAsObservable().Subscribe(async log =>
+                    {
+                        Console.WriteLine("[DEV-INF] Decoding a reporter removed event ...");
+                        var decodedReporterRemoved = Event<ReporterRemovedDTO>.DecodeEvent(log);
+                        var foundReporterRemoved = await _unitOfWork.ReporterRepository.FindAsync(decodedReporterRemoved.Event.Wallet);
+                        if (foundReporterRemoved != null)
+                        {
+                            _unitOfWork.ReporterRepository.Remove(foundReporterRemoved);
+                        }
+                        await _unitOfWork.SaveAsync();
+                    });
+
+                    reporterPostedSubscription.GetSubscriptionDataResponsesAsObservable().Subscribe(async log =>
+                    {
+                        Console.WriteLine("[DEV-INF] Decoding a reporter posted event ...");
+                        var decodedReporterPosted = Event<ReporterPostedDTO>.DecodeEvent(log);
+                        var foundReporterPosted = await _unitOfWork.ReporterRepository.FindAsync(decodedReporterPosted.Event.Wallet);
+                        if (foundReporterPosted != null)
+                        {
+                            Reporter postingReporter = await _unitOfWork.ReporterRepository.FindAsync(decodedReporterPosted.Event.Wallet);
+                            postingReporter.ReportCount += 1;
+                            postingReporter.LastReportedDate = DateTime.Now;
+                            _unitOfWork.ReporterRepository.Update(postingReporter);
+                        }
+                        await _unitOfWork.SaveAsync();
+                    });
+
+                    addLiquiditySubscription.GetSubscriptionDataResponsesAsObservable().Subscribe(async log =>
+                    {
+                        var decodedAddLiquidity = Event<AddLiquidityDTO>.DecodeEvent(log);
+                        if (decodedAddLiquidity != null)
+                        {
+                            Console.WriteLine("[DEV-INF] Decoding an add liquidity event ...");
+                            var foundUser = await _unitOfWork.UserRepository.FindAsync(decodedAddLiquidity.Event.Wallet);
+                            if (foundUser == null)
+                            {
+                                User user = new()
+                                {
+                                    Wallet = decodedAddLiquidity.Event.Wallet,
+                                    CreatedDate = DateTime.Now
+                                };
+                                await _unitOfWork.UserRepository.AddAsync(user);
+                                await _unitOfWork.SaveAsync();
+                            }
+                            AddLiquidityDTOAdd addLiquidityDTOAdd = new()
+                            {
+                                TxnHash = decodedAddLiquidity.Log.TransactionHash,
+                                Wallet = decodedAddLiquidity.Event.Wallet,
+                                Asset = decodedAddLiquidity.Event.Asset,
+                                Amount = decodedAddLiquidity.Event.Amount,
+                                Fee = decodedAddLiquidity.Event.Fee * decodedAddLiquidity.Event.MarkPriceIn,
+                                DateAdded = DateTime.Now
+                            };
+                            AddLiquidity addLiquidity = _mapper.Map<AddLiquidity>(addLiquidityDTOAdd);
+                            await _unitOfWork.AddLiquidityRepository.AddAsync(addLiquidity);
+                            await _unitOfWork.SaveAsync();
+                        }
+                        else
+                        {
+                            Console.WriteLine("[DEV-INF] Found not standard event log");
+                        }
+                    });
+
+                    increasePositionSubscription.GetSubscriptionDataResponsesAsObservable().Subscribe(async log =>
+                    {
+                        var decodedIncreasePosition = Event<IncreasePositionDTO>.DecodeEvent(log);
+                        if (decodedIncreasePosition != null)
+                        {
+                            Console.WriteLine("[DEV-INF] Decoding an increase position event ...");
+                        }
+                        else
+                        {
+                            Console.WriteLine("[DEV-INF] Found not standard event log");
+                        }
+                    });
+
+                    decreasePositionSubscription.GetSubscriptionDataResponsesAsObservable().Subscribe(async log =>
+                    {
+                        var decodedDecreasePosition = Event<DecreasePositionDTO>.DecodeEvent(log);
+                        if (decodedDecreasePosition != null)
+                        {
+                            Console.WriteLine("[DEV-INF] Decoding a decrease position event ...");
+                        }
+                        else
+                        {
+                            Console.WriteLine("[DEV-INF] Found not standard event log");
+                        }
+                    });
+
+                    updatePositionSubscription.GetSubscriptionDataResponsesAsObservable().Subscribe(async log =>
+                    {
+                        var decodedUpdatePosition = Event<UpdatePositionDTO>.DecodeEvent(log);
+                        if (decodedUpdatePosition != null)
+                        {
+                            Console.WriteLine("[DEV-INF] Decoding a update position event ...");
+                        }
+                        else
+                        {
+                            Console.WriteLine("[DEV-INF] Found not standard event log");
+                        }
+                    });
+
+                    closePositionSubscription.GetSubscriptionDataResponsesAsObservable().Subscribe(async log =>
+                    {
+                        var decodedClosePosition = Event<ClosePositionDTO>.DecodeEvent(log);
+                        if (decodedClosePosition != null)
+                        {
+                            Console.WriteLine("[DEV-INF] Decoding a close position event ...");
+                        }
+                        else
+                        {
+                            Console.WriteLine("[DEV-INF] Found not standard event log");
+                        }
+                    });
+
+                    liquidatePositionSubscription.GetSubscriptionDataResponsesAsObservable().Subscribe(async log =>
+                    {
+                        var decodedLiquidatePosition = Event<LiquidatePositionDTO>.DecodeEvent(log);
+                        if (decodedLiquidatePosition != null)
+                        {
+                            Console.WriteLine("[DEV-INF] Decoding a liquidate position event ...");
+                        }
+                        else
+                        {
+                            Console.WriteLine("[DEV-INF] Found not standard event log");
+                        }
+                    });
+
                     await client.StartAsync();
-                    await subscription.SubscribeAsync(swapFilterInput);
-                    await subscription.SubscribeAsync(addLiquidityFilterInput);
-                    await subscription.SubscribeAsync(reporterAddedFilterInput);
-                    await subscription.SubscribeAsync(reporterRemovedFilterInput);
-                    await subscription.SubscribeAsync(reporterPostedFilterInput);
-                    await subscription.SubscribeAsync(increasePositionFilterInput);
-                    await subscription.SubscribeAsync(decreasePositionFilterInput);
-                    await subscription.SubscribeAsync(updatePositionFilterInput);
-                    await subscription.SubscribeAsync(closePositionFilterInput);
-                    await subscription.SubscribeAsync(liquidatePositionFilterInput);
+                    await swapSubscription.SubscribeAsync(swapFilterInput);
+                    await reporterAddedSubscription.SubscribeAsync(reporterAddedFilterInput);
+                    await reporterRemovedSubscription.SubscribeAsync(reporterRemovedFilterInput);
+                    await reporterPostedSubscription.SubscribeAsync(reporterPostedFilterInput);
+                    await increasePositionSubscription.SubscribeAsync(increasePositionFilterInput);
+                    await decreasePositionSubscription.SubscribeAsync(decreasePositionFilterInput);
+                    await updatePositionSubscription.SubscribeAsync(updatePositionFilterInput);
+                    await closePositionSubscription.SubscribeAsync(closePositionFilterInput);
+                    await liquidatePositionSubscription.SubscribeAsync(liquidatePositionFilterInput);
                     while (true)
                     {
                         Console.WriteLine("[DEV-INF] Client state: " + client.WebSocketState);
@@ -215,19 +266,26 @@ namespace FDex.Application.Services
                         {
                             //restart client
                             Console.WriteLine($"[DEV-INF] Client {client.WebSocketState}, restarting ...");
-                            await subscription.UnsubscribeAsync();
+                            await swapSubscription.UnsubscribeAsync();
+                            await reporterAddedSubscription.UnsubscribeAsync();
+                            await reporterRemovedSubscription.UnsubscribeAsync();
+                            await reporterPostedSubscription.UnsubscribeAsync();
+                            await increasePositionSubscription.UnsubscribeAsync();
+                            await decreasePositionSubscription.UnsubscribeAsync();
+                            await updatePositionSubscription.UnsubscribeAsync();
+                            await closePositionSubscription.UnsubscribeAsync();
+                            await liquidatePositionSubscription.UnsubscribeAsync();
                             await client.StopAsync();
                             await client.StartAsync();
-                            await subscription.SubscribeAsync(swapFilterInput);
-                            await subscription.SubscribeAsync(addLiquidityFilterInput);
-                            await subscription.SubscribeAsync(reporterAddedFilterInput);
-                            await subscription.SubscribeAsync(reporterRemovedFilterInput);
-                            await subscription.SubscribeAsync(reporterPostedFilterInput);
-                            await subscription.SubscribeAsync(increasePositionFilterInput);
-                            await subscription.SubscribeAsync(decreasePositionFilterInput);
-                            await subscription.SubscribeAsync(updatePositionFilterInput);
-                            await subscription.SubscribeAsync(closePositionFilterInput);
-                            await subscription.SubscribeAsync(liquidatePositionFilterInput);
+                            await swapSubscription.SubscribeAsync(swapFilterInput);
+                            await reporterAddedSubscription.SubscribeAsync(reporterAddedFilterInput);
+                            await reporterRemovedSubscription.SubscribeAsync(reporterRemovedFilterInput);
+                            await reporterPostedSubscription.SubscribeAsync(reporterPostedFilterInput);
+                            await increasePositionSubscription.SubscribeAsync(increasePositionFilterInput);
+                            await decreasePositionSubscription.SubscribeAsync(decreasePositionFilterInput);
+                            await updatePositionSubscription.SubscribeAsync(updatePositionFilterInput);
+                            await closePositionSubscription.SubscribeAsync(closePositionFilterInput);
+                            await liquidatePositionSubscription.SubscribeAsync(liquidatePositionFilterInput);
                         }
                         await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
                     }
@@ -247,4 +305,3 @@ namespace FDex.Application.Services
         }
     }
 }
-
