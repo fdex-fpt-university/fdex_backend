@@ -8,9 +8,9 @@ namespace FDex.Application.DTOs.TradingPosition
 {
     [Event("IncreasePosition")]
     public class IncreasePositionDTOBase : IEventDTO
-	{
+    {
         [Parameter("bytes32", "key", 1, true)]
-        public virtual string Key { get; set; }
+        public virtual byte[] Key { get; set; }
 
         [Parameter("address", "wallet", 2, false)]
         public virtual string Wallet { get; set; }
@@ -27,8 +27,8 @@ namespace FDex.Application.DTOs.TradingPosition
         [Parameter("uint256", "sizeChanged", 6, false)]
         public virtual BigInteger SizeChanged { get; set; }
 
-        [Parameter("Side", "side", 7, false)]
-        public virtual Side Side { get; set; }
+        [Parameter("uint8", "side", 7, false)]
+        public virtual byte Side { get; set; }
 
         [Parameter("uint256", "indexPrice", 8, false)]
         public virtual BigInteger IndexPrice { get; set; }

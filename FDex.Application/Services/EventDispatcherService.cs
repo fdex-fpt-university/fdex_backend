@@ -9,12 +9,12 @@ using FDex.Application.Enumerations;
 using FDex.Domain.Entities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Nethereum.ABI.Model;
 using Nethereum.Contracts;
 using Nethereum.JsonRpc.Client;
 using Nethereum.JsonRpc.WebSocketStreamingClient;
 using Nethereum.RPC.Eth.DTOs;
 using Nethereum.RPC.Reactive.Eth.Subscriptions;
-using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace FDex.Application.Services
 {
@@ -57,15 +57,15 @@ namespace FDex.Application.Services
                     NewFilterInput reporterRemovedFilterInput = Event<ReporterRemovedDTO>.GetEventABI().CreateFilterInput();
                     NewFilterInput reporterPostedFilterInput = Event<ReporterPostedDTO>.GetEventABI().CreateFilterInput();
                     NewFilterInput increasePositionFilterInput = Event<IncreasePositionDTO>.GetEventABI().CreateFilterInput();
-                    NewFilterInput decreasePositionFilterInput = Event<IncreasePositionDTO>.GetEventABI().CreateFilterInput();
-                    NewFilterInput updatePositionFilterInput = Event<IncreasePositionDTO>.GetEventABI().CreateFilterInput();
-                    NewFilterInput closePositionFilterInput = Event<IncreasePositionDTO>.GetEventABI().CreateFilterInput();
-                    NewFilterInput liquidatePositionFilterInput = Event<IncreasePositionDTO>.GetEventABI().CreateFilterInput();
+                    NewFilterInput decreasePositionFilterInput = Event<DecreasePositionDTO>.GetEventABI().CreateFilterInput();
+                    NewFilterInput updatePositionFilterInput = Event<UpdatePositionDTO>.GetEventABI().CreateFilterInput();
+                    NewFilterInput closePositionFilterInput = Event<ClosePositionDTO>.GetEventABI().CreateFilterInput();
+                    NewFilterInput liquidatePositionFilterInput = Event<LiquidatePositionDTO>.GetEventABI().CreateFilterInput();
 
                     EthLogsObservableSubscription subscription = new(client);
                     var sub = subscription.GetSubscriptionDataResponsesAsObservable();
                     sub.Subscribe(async log =>
-                    {
+                     {
                         try
                         {
                             var decodedSwap = Event<SwapDTO>.DecodeEvent(log);
@@ -169,7 +169,7 @@ namespace FDex.Application.Services
                             }
                             else if (decodedIncreasePosition != null)
                             {
-                                Console.WriteLine("[DEV-INF] Decoding a increase position event ...");
+                                Console.WriteLine("[DEV-INF] Decoding an increase position event ...");
                             }
                             else if (decodedDecreasePosition != null)
                             {
@@ -177,7 +177,7 @@ namespace FDex.Application.Services
                             }
                             else if(decodedUpdatePosition != null)
                             {
-                                Console.WriteLine("[DEV-INF] Decoding a update position event ...");
+                                Console.WriteLine("[DEV-INF] Decoding an update position event ...");
                             }
                             else if(decodedClosePosition != null)
                             {
@@ -199,6 +199,15 @@ namespace FDex.Application.Services
                     });
                     await client.StartAsync();
                     await subscription.SubscribeAsync(swapFilterInput);
+                    await subscription.SubscribeAsync(addLiquidityFilterInput);
+                    await subscription.SubscribeAsync(reporterAddedFilterInput);
+                    await subscription.SubscribeAsync(reporterRemovedFilterInput);
+                    await subscription.SubscribeAsync(reporterPostedFilterInput);
+                    await subscription.SubscribeAsync(increasePositionFilterInput);
+                    await subscription.SubscribeAsync(decreasePositionFilterInput);
+                    await subscription.SubscribeAsync(updatePositionFilterInput);
+                    await subscription.SubscribeAsync(closePositionFilterInput);
+                    await subscription.SubscribeAsync(liquidatePositionFilterInput);
                     while (true)
                     {
                         Console.WriteLine("[DEV-INF] Client state: " + client.WebSocketState);
@@ -210,6 +219,15 @@ namespace FDex.Application.Services
                             await client.StopAsync();
                             await client.StartAsync();
                             await subscription.SubscribeAsync(swapFilterInput);
+                            await subscription.SubscribeAsync(addLiquidityFilterInput);
+                            await subscription.SubscribeAsync(reporterAddedFilterInput);
+                            await subscription.SubscribeAsync(reporterRemovedFilterInput);
+                            await subscription.SubscribeAsync(reporterPostedFilterInput);
+                            await subscription.SubscribeAsync(increasePositionFilterInput);
+                            await subscription.SubscribeAsync(decreasePositionFilterInput);
+                            await subscription.SubscribeAsync(updatePositionFilterInput);
+                            await subscription.SubscribeAsync(closePositionFilterInput);
+                            await subscription.SubscribeAsync(liquidatePositionFilterInput);
                         }
                         await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
                     }

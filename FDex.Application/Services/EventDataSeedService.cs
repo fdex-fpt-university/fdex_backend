@@ -27,14 +27,14 @@ namespace FDex.Application.Services
 
         bool isFirstParam = true;
         private static BigInteger _currentBlockNumber = 34115291;
-        private static BigInteger _limitBlockNumber = 9;
+        private static BigInteger _limitBlockNumber = 9999;
         const string RPC_URL = "https://sly-long-cherry.bsc-testnet.quiknode.pro/4ac0090884736ecd32a595fe2ec55910ca239cdb/";
 
         public EventDataSeedService(IMapper mapper, IServiceProvider serviceProvider)
         {
+            ClientBase.ConnectionTimeout = TimeSpan.FromDays(1);
             _serviceProvider = serviceProvider;
             _mapper = mapper;
-            ClientBase.ConnectionTimeout = TimeSpan.FromDays(1);
             _web3 = new(RPC_URL);
         }
 
@@ -82,8 +82,6 @@ namespace FDex.Application.Services
                 var updatePositionEvents = await updatePositionEventHandler.GetAllChangesAsync(filterAllUpdatePosition);
                 var closePositionEvents = await closePositionEventHandler.GetAllChangesAsync(filterAllClosePosition);
                 var liquidatePositionEvents = await liquidatePositionEventHandler.GetAllChangesAsync(filterAllLiquidatePosition);
-
-
 
                 foreach (var log in swapEvents)
                 {
@@ -156,6 +154,7 @@ namespace FDex.Application.Services
                     }
                     await _unitOfWork.SaveAsync();
                 }
+
                 foreach (var log in reporterRemovedEvents)
                 {
                     var foundReporterRemoved = await _unitOfWork.ReporterRepository.FindAsync(log.Event.Wallet);
@@ -165,6 +164,7 @@ namespace FDex.Application.Services
                     }
                     await _unitOfWork.SaveAsync();
                 }
+
                 foreach (var log in reporterPostedEvents)
                 {
                     var foundReporterPosted = await _unitOfWork.ReporterRepository.FindAsync(log.Event.Wallet);
@@ -177,7 +177,26 @@ namespace FDex.Application.Services
                     }
                     await _unitOfWork.SaveAsync();
                 }
-                
+
+                foreach(var log in increasePositionEvents)
+                {
+                }
+
+                foreach (var log in decreasePositionEvents)
+                {
+                }
+
+                foreach (var log in updatePositionEvents)
+                {
+                }
+
+                foreach (var log in closePositionEvents)
+                {
+                }
+
+                foreach (var log in liquidatePositionEvents)
+                {
+                }
             }
         }
 

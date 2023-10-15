@@ -52,6 +52,7 @@
     <None Remove="Features\Users\Handlers\Commands\" />
     <None Remove="Features\Users\Handlers\Queries\" />
     <None Remove="DTOs\TradingPosition\" />
+    <None Remove="Models\Application\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Contracts\" />
@@ -99,6 +100,7 @@
     <Folder Include="Features\Users\Handlers\Commands\" />
     <Folder Include="Features\Users\Handlers\Queries\" />
     <Folder Include="DTOs\TradingPosition\" />
+    <Folder Include="Models\Application\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FDex.Domain\FDex.Domain.csproj" />
