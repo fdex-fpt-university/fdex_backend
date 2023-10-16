@@ -15,8 +15,10 @@ namespace FDex.Domain.Entities
         public string Side { get; set; }
         public string IndexPrice { get; set; }
         public string FeeValue { get; set; }
+        public bool IsLiquidated { get; set; } = false;
+        public bool IsClosed { get; set; } = false;
         public DateTime OpenTime { get; set; }
-        public DateTime CloseTime { get; set; }
+        public DateTime? CloseTime { get; set; }
 
         public User User { get; set; }
     }

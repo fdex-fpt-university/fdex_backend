@@ -20,7 +20,7 @@ namespace FDex.Persistence.DbContexts
             modelBuilder.Entity<Swap>(entity =>
             {
                 entity.HasKey(u => u.TxnHash);
-                entity.HasOne<User>(s => s.User)
+                entity.HasOne(s => s.User)
                     .WithMany(u => u.Swaps)
                     .HasForeignKey(u => u.Wallet);
             });
@@ -41,12 +41,15 @@ namespace FDex.Persistence.DbContexts
             modelBuilder.Entity<AddLiquidity>(entity =>
             {
                 entity.HasKey(u => u.TxnHash);
+                entity.HasOne(s => s.User)
+                    .WithMany(u => u.AddLiquidities)
+                    .HasForeignKey(u => u.Wallet);
             });
 
             modelBuilder.Entity<Position>(entity =>
             {
                 entity.HasKey(u => u.Key);
-                entity.HasOne<User>(s => s.User)
+                entity.HasOne(s => s.User)
                     .WithMany(u => u.Positions)
                     .HasForeignKey(u => u.Wallet);
             });

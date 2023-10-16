@@ -12,6 +12,8 @@ namespace FDex.Domain.Entities
         public string Fee { get; set; }
         public string MarkPriceIn { get; set; }
         public DateTime DateAdded { get; set; }
+
+        public User User { get; set; }
     }
 }
 
