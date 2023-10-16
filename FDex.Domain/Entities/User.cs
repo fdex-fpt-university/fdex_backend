@@ -13,6 +13,8 @@ namespace FDex.Domain.Entities
         public DateTime CreatedDate { get; set; }
 
         public ICollection<Swap>? Swaps { get; set; }
+        public ICollection<AddLiquidity>? AddLiquidities { get; set; }
+        public ICollection<Position>? Positions { get; set; }
         public ICollection<User>? ReferredUsers { get; set; }
     }
 }
