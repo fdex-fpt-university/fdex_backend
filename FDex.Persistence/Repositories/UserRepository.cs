@@ -21,8 +21,6 @@ namespace FDex.Persistence.Repositories
             var totalUser = _context.Users;
             BigInteger accuredFees = 0;
             BigInteger accuredFeesChange = 0;
-            BigInteger assetsUnderManagement = 0;
-            BigInteger assetsUnderManagementChange = 0;
             BigInteger totalTradingVolumn = 0;
             BigInteger totalTradingVolumnChange = 0;
             BigInteger totalUserCount = totalUser.Count();
@@ -52,9 +50,7 @@ namespace FDex.Persistence.Repositories
                 AccuredFees = accuredFees.ToString(),
                 AccuredFeesChange = accuredFeesChange.ToString(),
                 TotalTradingVolumn = totalTradingVolumn.ToString(),
-                TotalTradingVolumnChange = totalTradingVolumnChange.ToString(),
-                AssetsUnderManagement = assetsUnderManagement.ToString(),
-                AssetsUnderManagementChange = assetsUnderManagementChange.ToString()
+                TotalTradingVolumnChange = totalTradingVolumnChange.ToString()
             };
             return dashboardItemDatas;
         }

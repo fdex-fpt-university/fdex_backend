@@ -27,7 +27,7 @@ namespace FDex.Application.Services
 
         bool isFirstParam = true;
         private static BigInteger _currentBlockNumber = 34115291;
-        private static BigInteger _limitBlockNumber = 9;
+        private static BigInteger _limitBlockNumber = 9999;
         const string RPC_URL = "https://bsc.getblock.io/c9c2311d-f632-47b1-ae8f-7cde9cd02fba/testnet/";
 
         public EventDataSeedService(IMapper mapper, IServiceProvider serviceProvider)
@@ -41,7 +41,6 @@ namespace FDex.Application.Services
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             await using var scope = _serviceProvider.CreateAsyncScope();
-            //var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             var latestBlockNumber = await _web3.Eth.Blocks.GetBlockNumber.SendRequestAsync();
             var poolAddress = "0x9Fca52B0E21AdfF52563D179b1593149109593b5";
             var oracleAddress = "0x1E16D408a6ae4E2a867cd33F15cb7E17441139c1";

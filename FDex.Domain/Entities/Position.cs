@@ -12,10 +12,9 @@ namespace FDex.Domain.Entities
 		public string IndexToken { get; set; }
         public string CollateralValue { get; set; }
         public string SizeChanged { get; set; }
-        public string Side { get; set; }
+        public bool Side { get; set; }
         public string IndexPrice { get; set; }
         public string FeeValue { get; set; }
-        public bool IsLiquidated { get; set; } = false;
         public bool IsClosed { get; set; } = false;
         public DateTime OpenTime { get; set; }
         public DateTime? CloseTime { get; set; }
