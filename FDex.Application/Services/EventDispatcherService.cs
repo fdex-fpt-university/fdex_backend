@@ -189,16 +189,17 @@ namespace FDex.Application.Services
                         {
                             Position pos = new()
                             {
+                                Id = Guid.NewGuid(),
                                 Key = key,
                                 Wallet = decodedIncreasePosition.Event.Wallet,
                                 CollateralToken = decodedIncreasePosition.Event.CollateralToken,
                                 IndexToken = decodedIncreasePosition.Event.IndexToken,
-                                CollateralValue = decodedIncreasePosition.Event.CollateralValue.ToString(),
-                                SizeChanged = decodedIncreasePosition.Event.SizeChanged.ToString(),
                                 Side = decodedIncreasePosition.Event.Side == '1',
-                                IndexPrice = decodedIncreasePosition.Event.IndexPrice.ToString(),
-                                FeeValue = decodedIncreasePosition.Event.FeeValue.ToString(),
-                                OpenTime = DateTime.Now,
+                                //CollateralValue = decodedIncreasePosition.Event.CollateralValue.ToString(),
+                                //IndexPrice = decodedIncreasePosition.Event.IndexPrice.ToString(),
+                                //SizeChanged = decodedIncreasePosition.Event.SizeChanged.ToString(),
+                                //FeeValue = decodedIncreasePosition.Event.FeeValue.ToString(),
+                                //OpenTime = DateTime.Now,
                             };
                             await _unitOfWork.PositionRepository.AddAsync(pos);
                         }
