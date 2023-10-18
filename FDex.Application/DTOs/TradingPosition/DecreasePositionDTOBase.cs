@@ -10,7 +10,7 @@ namespace FDex.Application.DTOs.TradingPosition
     public class DecreasePositionDTOBase : IEventDTO
     {
         [Parameter("bytes32", "key", 1, true)]
-        public virtual string Key { get; set; }
+        public virtual byte[] Key { get; set; }
 
         [Parameter("address", "wallet", 2, false)]
         public virtual string Wallet { get; set; }

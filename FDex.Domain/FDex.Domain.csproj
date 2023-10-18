@@ -9,9 +9,13 @@
   <ItemGroup>
     <None Remove="Common\" />
     <None Remove="Entities\" />
+    <None Remove="Enumerations\" />
+    <None Remove="ValueObjects\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Common\" />
     <Folder Include="Entities\" />
+    <Folder Include="Enumerations\" />
+    <Folder Include="ValueObjects\" />
   </ItemGroup>
 </Project>

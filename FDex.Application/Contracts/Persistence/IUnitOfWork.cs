@@ -8,6 +8,7 @@ namespace FDex.Application.Contracts.Persistence
         IReporterRepository ReporterRepository { get; }
         IAddLiquidityRepository AddLiquidityRepository { get; }
         IPositionRepository PositionRepository { get; }
+        IPositionDetailRepository PositionDetailRepository { get; }
 
         Task SaveAsync();
         void Dispose();

@@ -9,7 +9,7 @@ namespace FDex.Application.DTOs.TradingPosition
 	public class UpdatePositionDTOBase : IEventDTO
 	{
         [Parameter("bytes32", "key", 1, true)]
-        public virtual string Key { get; set; }
+        public virtual byte[] Key { get; set; }
 
         [Parameter("uint256", "size", 2, false)]
         public virtual BigInteger Size { get; set; }
