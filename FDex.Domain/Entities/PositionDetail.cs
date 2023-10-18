@@ -6,11 +6,12 @@ namespace FDex.Domain.Entities
 {
 	public class PositionDetail
 	{
+        public Guid Id { get; set; }
         public Guid PositionId { get; set; }
         public string CollateralValue { get; set; }
         public string IndexPrice { get; set; }
         public string EntryPrice { get; set; }
-        public EventType EventType { get; set; }
+        public PositionState PositionState { get; set; }
         public string SizeChanged { get; set; }
         public string FeeValue { get; set; }
         public string? EntryInterestRate { get; set; }

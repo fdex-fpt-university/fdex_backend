@@ -14,7 +14,7 @@ namespace FDex.Domain.Entities
         public bool Side { get; set; }
 
         public User User { get; set; }
-        public ICollection<PositionDetail> PositionDetails { get; set; }
+        public ICollection<PositionDetail>? PositionDetails { get; set; }
     }
 }
 

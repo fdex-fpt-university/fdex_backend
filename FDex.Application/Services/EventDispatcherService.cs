@@ -185,7 +185,7 @@ namespace FDex.Application.Services
                         var decodedIncreasePosition = Event<IncreasePositionDTO>.DecodeEvent(log);
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                         string key = Encoding.UTF8.GetString(decodedIncreasePosition.Event.Key);
-                        var foundPosition = await _unitOfWork.PositionRepository.FindAsync(key);
+                        Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
                         if (foundPosition == null)
                         {
                             Position pos = new()
@@ -200,10 +200,27 @@ namespace FDex.Application.Services
                             await _unitOfWork.PositionRepository.AddAsync(pos);
                             PositionDetail posd = new()
                             {
+                                Id = Guid.NewGuid(),
                                 PositionId = pos.Id,
                                 CollateralValue = decodedIncreasePosition.Event.CollateralValue.ToString(),
                                 IndexPrice = decodedIncreasePosition.Event.IndexPrice.ToString(),
-                                EventType = EventType.Increase,
+                                PositionState = PositionState.Open,
+                                SizeChanged = decodedIncreasePosition.Event.SizeChanged.ToString(),
+                                FeeValue = decodedIncreasePosition.Event.FeeValue.ToString(),
+                                Time = DateTime.Now
+                            };
+                            await _unitOfWork.PositionDetailRepository.AddAsync(posd);
+                        }
+                        else
+                        {
+                            PositionState state = foundPosition.PositionDetails.Last().PositionState;
+                            PositionDetail posd = new()
+                            {
+                                Id = Guid.NewGuid(),
+                                PositionId = foundPosition.Id,
+                                CollateralValue = decodedIncreasePosition.Event.CollateralValue.ToString(),
+                                IndexPrice = decodedIncreasePosition.Event.IndexPrice.ToString(),
+                                PositionState = state == PositionState.Close ? PositionState.Open : PositionState.Increase,
                                 SizeChanged = decodedIncreasePosition.Event.SizeChanged.ToString(),
                                 FeeValue = decodedIncreasePosition.Event.FeeValue.ToString(),
                                 Time = DateTime.Now
@@ -220,15 +237,16 @@ namespace FDex.Application.Services
                         var decodedDecreasePosition = Event<DecreasePositionDTO>.DecodeEvent(log);
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                         string key = Encoding.UTF8.GetString(decodedDecreasePosition.Event.Key);
-                        var foundPosition = await _unitOfWork.PositionRepository.FindAsync(key);
+                        Position foundPosition = await _unitOfWork.PositionRepository.FindAsync(key);
                         if (foundPosition != null)
                         {
                             PositionDetail posd = new()
                             {
+                                Id = Guid.NewGuid(),
                                 PositionId = foundPosition.Id,
                                 CollateralValue = (~decodedDecreasePosition.Event.CollateralChanged + 1).ToString(),
                                 IndexPrice = decodedDecreasePosition.Event.IndexPrice.ToString(),
-                                EventType = EventType.Decrease,
+                                PositionState = PositionState.Decrease,
                                 SizeChanged = decodedDecreasePosition.Event.SizeChanged.ToString(),
                                 FeeValue = decodedDecreasePosition.Event.FeeValue.ToString(),
                                 Time = DateTime.Now
@@ -245,7 +263,27 @@ namespace FDex.Application.Services
                         var decodedUpdatePosition = Event<UpdatePositionDTO>.DecodeEvent(log);
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                         string key = Encoding.UTF8.GetString(decodedUpdatePosition.Event.Key);
-                        var foundPosition = await _unitOfWork.PositionRepository.FindAsync(key);
+                        Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
+                        PositionDetail lastState = foundPosition.PositionDetails.Last();
+                        switch (lastState.PositionState)
+                        {
+                            case PositionState.Open:
+                            {
+                                lastState.EntryInterestRate = decodedUpdatePosition.Event.EntryInterestRate.ToString();
+                                break;
+                            }
+                            case PositionState.Increase:
+                            {
+                                
+                                break;
+                            }
+                            case PositionState.Decrease:
+                            {
+                                
+                                break;
+                            }
+                        }
+                        _unitOfWork.PositionDetailRepository.Update(lastState);
                         await _unitOfWork.SaveAsync();
                         _unitOfWork.Dispose();
                     });

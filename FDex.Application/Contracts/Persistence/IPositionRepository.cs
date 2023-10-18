@@ -5,6 +5,7 @@ namespace FDex.Application.Contracts.Persistence
 {
 	public interface IPositionRepository : IGenericRepository<Position>
 	{
-	}
+        Task<Position> GetPositionInDetails(string key);
+    }
 }
 

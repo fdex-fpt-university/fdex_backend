@@ -1,7 +1,9 @@
 ﻿using System;
+using Azure;
 using FDex.Application.Contracts.Persistence;
 using FDex.Domain.Entities;
 using FDex.Persistence.DbContexts;
+using Microsoft.EntityFrameworkCore;
 
 namespace FDex.Persistence.Repositories
 {
@@ -12,5 +14,12 @@ namespace FDex.Persistence.Repositories
 		{
 			_context = context;
 		}
-	}
+
+        public async Task<Position> GetPositionInDetails(string key)
+        {
+			return await _context.Positions
+				.Include(p => p.PositionDetails)
+                .FirstOrDefaultAsync(p => p.Key.Equals(key, StringComparison.OrdinalIgnoreCase));
+        }
+    }
 }

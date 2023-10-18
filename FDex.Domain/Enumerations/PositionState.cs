@@ -1,7 +1,7 @@
 ﻿using System;
 namespace FDex.Domain.Enumerations
 {
-	public enum EventType
+	public enum PositionState
 	{
 		Open,
 		Increase,

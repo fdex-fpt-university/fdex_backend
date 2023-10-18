@@ -48,7 +48,7 @@ namespace FDex.Persistence.DbContexts
 
             modelBuilder.Entity<Position>(entity =>
             {
-                entity.HasKey(u => u.Key);
+                entity.HasKey(u => u.Id);
                 entity.HasOne(s => s.User)
                     .WithMany(u => u.Positions)
                     .HasForeignKey(u => u.Wallet);
@@ -56,6 +56,7 @@ namespace FDex.Persistence.DbContexts
 
             modelBuilder.Entity<PositionDetail>(entity =>
             {
+                entity.HasKey(u => u.Id);
                 entity.HasOne(s => s.Position)
                     .WithMany(u => u.PositionDetails)
                     .HasForeignKey(u => u.PositionId);
