@@ -9,13 +9,13 @@ namespace FDex.Domain.Entities
         public Guid Id { get; set; }
         public Guid PositionId { get; set; }
         public string CollateralValue { get; set; }
-        public string IndexPrice { get; set; }
-        public string EntryPrice { get; set; }
+        public string? IndexPrice { get; set; }
+        public string? EntryPrice { get; set; }
         public PositionState PositionState { get; set; }
         public string SizeChanged { get; set; }
-        public string FeeValue { get; set; }
+        public string? FeeValue { get; set; }
         public string? EntryInterestRate { get; set; }
-        public int? Pnl { get; set; }
+        public string? Pnl { get; set; }
         public DateTime Time { get; set; }
 
         public Position Position { get; set; }

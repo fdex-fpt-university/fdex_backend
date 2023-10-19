@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using System.Text;
 using AutoMapper;
 using FDex.Application.Contracts.Persistence;
@@ -25,6 +26,8 @@ namespace FDex.Application.Services
         private readonly IMapper _mapper;
         private readonly List<string> _wss;
         private int currentWssIndex;
+        private bool _increasePositionProcessed = false;
+        TaskCompletionSource<object> increasePositionCompletionSource = new TaskCompletionSource<object>();
 
         public EventDispatcherService(IServiceProvider serviceProvider, IMapper mapper)
         {
@@ -184,6 +187,16 @@ namespace FDex.Application.Services
                         Console.WriteLine("[DEV-INF] Decoding an increase position event ...");
                         var decodedIncreasePosition = Event<IncreasePositionDTO>.DecodeEvent(log);
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                        var foundUser = await _unitOfWork.UserRepository.FindAsync(decodedIncreasePosition.Event.Wallet);
+                        if (foundUser == null)
+                        {
+                            User user = new()
+                            {
+                                Wallet = decodedIncreasePosition.Event.Wallet,
+                                CreatedDate = DateTime.Now
+                            };
+                            await _unitOfWork.UserRepository.AddAsync(user);
+                        }
                         string key = Encoding.UTF8.GetString(decodedIncreasePosition.Event.Key);
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
                         if (foundPosition == null)
@@ -195,6 +208,7 @@ namespace FDex.Application.Services
                                 Wallet = decodedIncreasePosition.Event.Wallet,
                                 CollateralToken = decodedIncreasePosition.Event.CollateralToken,
                                 IndexToken = decodedIncreasePosition.Event.IndexToken,
+                                Size = decodedIncreasePosition.Event.SizeChanged.ToString(),
                                 Side = decodedIncreasePosition.Event.Side == '1',
                             };
                             await _unitOfWork.PositionRepository.AddAsync(pos);
@@ -210,10 +224,12 @@ namespace FDex.Application.Services
                                 Time = DateTime.Now
                             };
                             await _unitOfWork.PositionDetailRepository.AddAsync(posd);
+
                         }
                         else
                         {
                             PositionState state = foundPosition.PositionDetails.Last().PositionState;
+                            foundPosition.Size = decodedIncreasePosition.Event.SizeChanged.ToString();
                             PositionDetail posd = new()
                             {
                                 Id = Guid.NewGuid(),
@@ -225,10 +241,13 @@ namespace FDex.Application.Services
                                 FeeValue = decodedIncreasePosition.Event.FeeValue.ToString(),
                                 Time = DateTime.Now
                             };
+                            _unitOfWork.PositionRepository.Update(foundPosition);
                             await _unitOfWork.PositionDetailRepository.AddAsync(posd);
                         }
                         await _unitOfWork.SaveAsync();
                         _unitOfWork.Dispose();
+                        _increasePositionProcessed = true;
+                        increasePositionCompletionSource.SetResult(null);
                     });
 
                     decreasePositionSubscription.GetSubscriptionDataResponsesAsObservable().Subscribe(async log =>
@@ -237,22 +256,20 @@ namespace FDex.Application.Services
                         var decodedDecreasePosition = Event<DecreasePositionDTO>.DecodeEvent(log);
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                         string key = Encoding.UTF8.GetString(decodedDecreasePosition.Event.Key);
-                        Position foundPosition = await _unitOfWork.PositionRepository.FindAsync(key);
-                        if (foundPosition != null)
+                        Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
+                        foundPosition.Size = (BigInteger.Parse(foundPosition.Size) - decodedDecreasePosition.Event.SizeChanged).ToString();
+                        PositionDetail posd = new()
                         {
-                            PositionDetail posd = new()
-                            {
-                                Id = Guid.NewGuid(),
-                                PositionId = foundPosition.Id,
-                                CollateralValue = (~decodedDecreasePosition.Event.CollateralChanged + 1).ToString(),
-                                IndexPrice = decodedDecreasePosition.Event.IndexPrice.ToString(),
-                                PositionState = PositionState.Decrease,
-                                SizeChanged = decodedDecreasePosition.Event.SizeChanged.ToString(),
-                                FeeValue = decodedDecreasePosition.Event.FeeValue.ToString(),
-                                Time = DateTime.Now
-                            };
-                            await _unitOfWork.PositionDetailRepository.AddAsync(posd);
-                        }
+                            Id = Guid.NewGuid(),
+                            PositionId = foundPosition.Id,
+                            CollateralValue = (~decodedDecreasePosition.Event.CollateralChanged + 1).ToString(),
+                            IndexPrice = decodedDecreasePosition.Event.IndexPrice.ToString(),
+                            PositionState = decodedDecreasePosition.Event.SizeChanged == BigInteger.Parse(foundPosition.Size) ? PositionState.Close : PositionState.Decrease,
+                            SizeChanged = decodedDecreasePosition.Event.SizeChanged.ToString(),
+                            FeeValue = decodedDecreasePosition.Event.FeeValue.ToString(),
+                            Time = DateTime.Now
+                        };
+                        await _unitOfWork.PositionDetailRepository.AddAsync(posd);
                         await _unitOfWork.SaveAsync();
                         _unitOfWork.Dispose();
                     });
@@ -260,6 +277,10 @@ namespace FDex.Application.Services
                     updatePositionSubscription.GetSubscriptionDataResponsesAsObservable().Subscribe(async log =>
                     {
                         Console.WriteLine("[DEV-INF] Decoding a update position event ...");
+                        if (!_increasePositionProcessed)
+                        {
+                            await increasePositionCompletionSource.Task;
+                        }
                         var decodedUpdatePosition = Event<UpdatePositionDTO>.DecodeEvent(log);
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                         string key = Encoding.UTF8.GetString(decodedUpdatePosition.Event.Key);
@@ -268,21 +289,25 @@ namespace FDex.Application.Services
                         switch (lastState.PositionState)
                         {
                             case PositionState.Open:
-                            {
-                                lastState.EntryInterestRate = decodedUpdatePosition.Event.EntryInterestRate.ToString();
-                                break;
-                            }
+                                {
+                                    foundPosition.Size = decodedUpdatePosition.Event.Size.ToString();
+                                    lastState.EntryInterestRate = decodedUpdatePosition.Event.EntryInterestRate.ToString();
+                                    break;
+                                }
                             case PositionState.Increase:
-                            {
-                                
-                                break;
-                            }
+                                {
+                                    foundPosition.Size = decodedUpdatePosition.Event.Size.ToString();
+                                    lastState.EntryInterestRate = decodedUpdatePosition.Event.EntryInterestRate.ToString();
+                                    break;
+                                }
                             case PositionState.Decrease:
-                            {
-                                
-                                break;
-                            }
+                                {
+                                    foundPosition.Size = decodedUpdatePosition.Event.Size.ToString();
+                                    lastState.EntryInterestRate = decodedUpdatePosition.Event.EntryInterestRate.ToString();
+                                    break;
+                                }
                         }
+                        _unitOfWork.PositionRepository.Update(foundPosition);
                         _unitOfWork.PositionDetailRepository.Update(lastState);
                         await _unitOfWork.SaveAsync();
                         _unitOfWork.Dispose();
@@ -293,6 +318,17 @@ namespace FDex.Application.Services
                         Console.WriteLine("[DEV-INF] Decoding a close position event ...");
                         var decodedClosePosition = Event<ClosePositionDTO>.DecodeEvent(log);
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                        string key = Encoding.UTF8.GetString(decodedClosePosition.Event.Key);
+                        Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
+                        PositionDetail posd = new()
+                        {
+                            Id = Guid.NewGuid(),
+                            PositionId = foundPosition.Id,
+                            CollateralValue = (~decodedClosePosition.Event.CollateralValue + 1).ToString(),
+                            PositionState = PositionState.Close,
+                            SizeChanged = decodedClosePosition.Event.Size.ToString(),
+                            Time = DateTime.Now
+                        };
                         await _unitOfWork.SaveAsync();
                         _unitOfWork.Dispose();
                     });
@@ -302,6 +338,18 @@ namespace FDex.Application.Services
                         Console.WriteLine("[DEV-INF] Decoding a liquidate position event ...");
                         var decodedLiquidatePosition = Event<LiquidatePositionDTO>.DecodeEvent(log);
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                        string key = Encoding.UTF8.GetString(decodedLiquidatePosition.Event.Key);
+                        Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
+                        PositionDetail posd = new()
+                        {
+                            Id = Guid.NewGuid(),
+                            PositionId = foundPosition.Id,
+                            CollateralValue = (~decodedLiquidatePosition.Event.CollateralValue + 1).ToString(),
+                            PositionState = PositionState.Close,
+                            SizeChanged = decodedLiquidatePosition.Event.Size.ToString(),
+                            Pnl = decodedLiquidatePosition.Event.Pnl.Sig == 1 ? decodedLiquidatePosition.Event.Pnl.Abs.ToString() : (~decodedLiquidatePosition.Event.Pnl.Abs + 1).ToString(),
+                            Time = DateTime.Now
+                        };
                         await _unitOfWork.SaveAsync();
                         _unitOfWork.Dispose();
                     });

@@ -19,7 +19,7 @@ namespace FDex.Persistence.Repositories
         {
 			return await _context.Positions
 				.Include(p => p.PositionDetails)
-                .FirstOrDefaultAsync(p => p.Key.Equals(key, StringComparison.OrdinalIgnoreCase));
+				.FirstOrDefaultAsync(p => p.Key.ToLower().Equals(key.ToLower()));
         }
     }
 }
