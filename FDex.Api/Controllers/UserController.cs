@@ -18,18 +18,18 @@ namespace FDex.Api.Controllers
         }
 
         [HttpGet("[action]")]
-        public async Task<ActionResult<bool>> GetAccountStatus([FromBody] string wallet)
+        public async Task<ActionResult<bool>> GetAccountStatus([FromQuery] string wallet)
         {
             bool accountStatus = await _mediator.Send(new GetAccountStatusRequest() { Wallet = wallet});
             return Ok(accountStatus);
         }
 
-        [HttpPost("[action]/{referralUser}")]
-        public async Task<ActionResult> PostReferredUser([FromBody] string referringUser, string referralUser)
+        [HttpPost("[action]")]
+        public async Task<bool> PostReferredUser([FromBody] UpdateReferredUserCommand command)
         {
-            var command = new UpdateReferredUserCommand() { ReferringUser = referringUser, ReferralUser = referralUser };
+            var commandrs = new UpdateReferredUserCommand() { ReferringUser = command.ReferringUser, ReferralUser = command.ReferralUser };
             await _mediator.Send(command);
-            return Ok();
+            return true;
         }
     }
 }

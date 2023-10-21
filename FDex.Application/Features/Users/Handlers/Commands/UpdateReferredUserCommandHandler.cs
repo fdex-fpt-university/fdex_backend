@@ -7,16 +7,16 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace FDex.Application.Features.Users.Handlers.Commands
 {
-	public class UpdateReferredUserCommandHandler : IRequestHandler<UpdateReferredUserCommand>
+    public class UpdateReferredUserCommandHandler : IRequestHandler<UpdateReferredUserCommand, bool>
     {
         private readonly IServiceProvider _serviceProvider;
 
         public UpdateReferredUserCommandHandler(IServiceProvider serviceProvider)
-		{
+        {
             _serviceProvider = serviceProvider;
-		}
+        }
 
-        public async Task Handle(UpdateReferredUserCommand request, CancellationToken cancellationToken)
+        public async Task<bool> Handle(UpdateReferredUserCommand request, CancellationToken cancellationToken)
         {
             await using var scope = _serviceProvider.CreateAsyncScope();
             var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
@@ -24,7 +24,10 @@ namespace FDex.Application.Features.Users.Handlers.Commands
             referringUser.ReferredUserOf = request.ReferralUser;
             referringUser.Level = 0;
             _unitOfWork.UserRepository.Update(referringUser);
+            await _unitOfWork.SaveAsync();
             _unitOfWork.Dispose();
+
+            return true;
         }
     }
 }
