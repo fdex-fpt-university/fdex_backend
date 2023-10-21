@@ -6,7 +6,8 @@ namespace FDex.Domain.Enumerations
 		Open,
 		Increase,
 		Decrease,
-		Close
+		Close,
+		Liquidate
 	}
 }
 

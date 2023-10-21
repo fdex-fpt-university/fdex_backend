@@ -45,10 +45,10 @@ namespace FDex.Application.Services
             var latestBlockNumber = await _web3.Eth.Blocks.GetBlockNumber.SendRequestAsync();
             var poolAddress = "0x9Fca52B0E21AdfF52563D179b1593149109593b5";
             var oracleAddress = "0x1E16D408a6ae4E2a867cd33F15cb7E17441139c1";
-            var increasePositionEventHandler = _web3.Eth.GetEvent<IncreasePositionDTO>(poolAddress);
-            var decreasePositionEventHandler = _web3.Eth.GetEvent<DecreasePositionDTO>(poolAddress);
-            var updatePositionEventHandler = _web3.Eth.GetEvent<UpdatePositionDTO>(poolAddress);
-            var closePositionEventHandler = _web3.Eth.GetEvent<ClosePositionDTO>(poolAddress);
+            var increasePositionEventHandler = _web3.Eth.GetEvent<FDexIncreaPositionDTO>(poolAddress);
+            var decreasePositionEventHandler = _web3.Eth.GetEvent<FDexDecreaPositionDTO>(poolAddress);
+            var openPositionEventHandler = _web3.Eth.GetEvent<FDexOpenPositionDTO>(poolAddress);
+            var closePositionEventHandler = _web3.Eth.GetEvent<FDexClosePositionDTO>(poolAddress);
             var liquidatePositionEventHandler = _web3.Eth.GetEvent<LiquidatePositionDTO>(poolAddress);
             var swapEventHandler = _web3.Eth.GetEvent<SwapDTO>(poolAddress);
             var addLiquidityEventHandler = _web3.Eth.GetEvent<AddLiquidityDTO>(poolAddress);
@@ -69,7 +69,7 @@ namespace FDex.Application.Services
                 var filterAllReporterPosted = reporterPostedEventHandler.CreateFilterInput(startReporterBlock, endReporterBlock);
                 var filterAllIncreasePosition = increasePositionEventHandler.CreateFilterInput(startCommonBlock, endCommonBlock);
                 var filterAllDecreasePosition = decreasePositionEventHandler.CreateFilterInput(startCommonBlock, endCommonBlock);
-                var filterAllUpdatePosition = updatePositionEventHandler.CreateFilterInput(startCommonBlock, endCommonBlock);
+                var filterAllOpenPosition = openPositionEventHandler.CreateFilterInput(startCommonBlock, endCommonBlock);
                 var filterAllClosePosition = closePositionEventHandler.CreateFilterInput(startCommonBlock, endCommonBlock);
                 var filterAllLiquidatePosition = liquidatePositionEventHandler.CreateFilterInput(startCommonBlock, endCommonBlock);
 
@@ -124,7 +124,7 @@ namespace FDex.Application.Services
                     var addLiquidityEvents = await addLiquidityEventHandler.GetAllChangesAsync(filterAllAddLiquidity);
                     var increasePositionEvents = await increasePositionEventHandler.GetAllChangesAsync(filterAllIncreasePosition);
                     var decreasePositionEvents = await decreasePositionEventHandler.GetAllChangesAsync(filterAllDecreasePosition);
-                    var updatePositionEvents = await updatePositionEventHandler.GetAllChangesAsync(filterAllUpdatePosition);
+                    var openPositionEvents = await openPositionEventHandler.GetAllChangesAsync(filterAllOpenPosition);
                     var closePositionEvents = await closePositionEventHandler.GetAllChangesAsync(filterAllClosePosition);
                     var liquidatePositionEvents = await liquidatePositionEventHandler.GetAllChangesAsync(filterAllLiquidatePosition);
 
@@ -194,16 +194,15 @@ namespace FDex.Application.Services
                         _unitOfWork.Dispose();
                     }
 
+                    foreach (var log in openPositionEvents)
+                    {
+                    }
 
                     foreach (var log in increasePositionEvents)
                     {
                     }
 
                     foreach (var log in decreasePositionEvents)
-                    {
-                    }
-
-                    foreach (var log in updatePositionEvents)
                     {
                     }
 
