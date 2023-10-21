@@ -42,5 +42,6 @@ namespace FDex.Application.DTOs.TradingPosition
         [Parameter("uint256", "feeValue", 11, false)]
         public virtual BigInteger FeeValue { get; set; }
     }
+
 }
 

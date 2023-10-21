@@ -6,8 +6,8 @@ using Nethereum.ABI.FunctionEncoding.Attributes;
 
 namespace FDex.Application.DTOs.TradingPosition
 {
-    [Event("DecreasePosition")]
-    public class DecreasePositionDTOBase : IEventDTO
+    [Event("FDexDecreaPosition")]
+    public class FDexDecreaPositionDTOBase : IEventDTO
     {
         [Parameter("bytes32", "key", 1, true)]
         public virtual byte[] Key { get; set; }
@@ -38,6 +38,21 @@ namespace FDex.Application.DTOs.TradingPosition
 
         [Parameter("uint256", "feeValue", 10, false)]
         public virtual BigInteger FeeValue { get; set; }
+
+        [Parameter("uint256", "size", 11, false)]
+        public virtual BigInteger Size { get; set; }
+
+        [Parameter("uint256", "collateralValue", 12, false)]
+        public virtual BigInteger CollateralValue { get; set; }
+
+        [Parameter("uint256", "entryPrice", 13, false)]
+        public virtual BigInteger EntryPrice { get; set; }
+
+        [Parameter("uint256", "entryInterestRate", 14, false)]
+        public virtual BigInteger EntryInterestRate { get; set; }
+
+        [Parameter("uint256", "reserveAmount", 15, false)]
+        public virtual BigInteger ReserveAmount { get; set; }
     }
 }
 

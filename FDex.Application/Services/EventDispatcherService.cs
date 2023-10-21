@@ -26,7 +26,6 @@ namespace FDex.Application.Services
         private readonly IMapper _mapper;
         private readonly List<string> _wss;
         private int currentWssIndex;
-        Dictionary<string, TaskCompletionSource<bool>> eventStatus = new();
 
         public EventDispatcherService(IServiceProvider serviceProvider, IMapper mapper)
         {
@@ -57,10 +56,10 @@ namespace FDex.Application.Services
                     NewFilterInput reporterAddedFilterInput = Event<ReporterAddedDTO>.GetEventABI().CreateFilterInput();
                     NewFilterInput reporterRemovedFilterInput = Event<ReporterRemovedDTO>.GetEventABI().CreateFilterInput();
                     NewFilterInput reporterPostedFilterInput = Event<ReporterPostedDTO>.GetEventABI().CreateFilterInput();
-                    NewFilterInput increasePositionFilterInput = Event<IncreasePositionDTO>.GetEventABI().CreateFilterInput();
-                    NewFilterInput decreasePositionFilterInput = Event<DecreasePositionDTO>.GetEventABI().CreateFilterInput();
-                    NewFilterInput updatePositionFilterInput = Event<UpdatePositionDTO>.GetEventABI().CreateFilterInput();
-                    NewFilterInput closePositionFilterInput = Event<ClosePositionDTO>.GetEventABI().CreateFilterInput();
+                    NewFilterInput openPositionFilterInput = Event<FDexOpenPositionDTO>.GetEventABI().CreateFilterInput();
+                    NewFilterInput increasePositionFilterInput = Event<FDexIncreaPositionDTO>.GetEventABI().CreateFilterInput();
+                    NewFilterInput decreasePositionFilterInput = Event<FDexDecreaPositionDTO>.GetEventABI().CreateFilterInput();
+                    NewFilterInput closePositionFilterInput = Event<FDexClosePositionDTO>.GetEventABI().CreateFilterInput();
                     NewFilterInput liquidatePositionFilterInput = Event<LiquidatePositionDTO>.GetEventABI().CreateFilterInput();
 
                     EthLogsObservableSubscription swapSubscription = new(client);
@@ -68,9 +67,9 @@ namespace FDex.Application.Services
                     EthLogsObservableSubscription reporterAddedSubscription = new(client);
                     EthLogsObservableSubscription reporterRemovedSubscription = new(client);
                     EthLogsObservableSubscription reporterPostedSubscription = new(client);
+                    EthLogsObservableSubscription openPositionSubscription = new(client);
                     EthLogsObservableSubscription increasePositionSubscription = new(client);
                     EthLogsObservableSubscription decreasePositionSubscription = new(client);
-                    EthLogsObservableSubscription updatePositionSubscription = new(client);
                     EthLogsObservableSubscription closePositionSubscription = new(client);
                     EthLogsObservableSubscription liquidatePositionSubscription = new(client);
 
@@ -181,10 +180,24 @@ namespace FDex.Application.Services
                         _unitOfWork.Dispose();
                     });
 
+                    openPositionSubscription.GetSubscriptionDataResponsesAsObservable().Subscribe(async log =>
+                    {
+                        Console.WriteLine("[DEV-INF] Decoding an open position event ...");
+                        var decodedOpenPosition = Event<FDexOpenPositionDTO>.DecodeEvent(log);
+                        string key = Encoding.UTF8.GetString(decodedOpenPosition.Event.Key);
+                        var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                        Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
+                        PositionDetail lastState = foundPosition.PositionDetails.Last();
+                        _unitOfWork.PositionRepository.Update(foundPosition);
+                        _unitOfWork.PositionDetailRepository.Update(lastState);
+                        await _unitOfWork.SaveAsync();
+                        _unitOfWork.Dispose();
+                    });
+
                     increasePositionSubscription.GetSubscriptionDataResponsesAsObservable().Subscribe(async log =>
                     {
                         Console.WriteLine("[DEV-INF] Decoding an increase position event ...");
-                        var decodedIncreasePosition = Event<IncreasePositionDTO>.DecodeEvent(log);
+                        var decodedIncreasePosition = Event<FDexIncreaPositionDTO>.DecodeEvent(log);
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                         var foundUser = await _unitOfWork.UserRepository.FindAsync(decodedIncreasePosition.Event.Wallet);
                         if (foundUser == null)
@@ -197,10 +210,6 @@ namespace FDex.Application.Services
                             await _unitOfWork.UserRepository.AddAsync(user);
                         }
                         string key = Encoding.UTF8.GetString(decodedIncreasePosition.Event.Key);
-                        if (!eventStatus.ContainsKey(key))
-                        {
-                            eventStatus[key] = new TaskCompletionSource<bool>();
-                        }
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
                         if (foundPosition == null)
                         {
@@ -248,7 +257,6 @@ namespace FDex.Application.Services
                         }
                         await _unitOfWork.SaveAsync();
                         _unitOfWork.Dispose();
-                        eventStatus[key].SetResult(true);
                     });
 
                     decreasePositionSubscription.GetSubscriptionDataResponsesAsObservable().Subscribe(async log =>
@@ -257,10 +265,6 @@ namespace FDex.Application.Services
                         var decodedDecreasePosition = Event<DecreasePositionDTO>.DecodeEvent(log);
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                         string key = Encoding.UTF8.GetString(decodedDecreasePosition.Event.Key);
-                        if (!eventStatus.ContainsKey("!" + key))
-                        {
-                            eventStatus["!" + key] = new TaskCompletionSource<bool>();
-                        }
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
                         foundPosition.Size = (BigInteger.Parse(foundPosition.Size) - decodedDecreasePosition.Event.SizeChanged).ToString();
                         PositionDetail posd = new()
@@ -277,53 +281,13 @@ namespace FDex.Application.Services
                         await _unitOfWork.PositionDetailRepository.AddAsync(posd);
                         await _unitOfWork.SaveAsync();
                         _unitOfWork.Dispose();
-                        eventStatus["!" + key].SetResult(true);
                     });
 
-                    updatePositionSubscription.GetSubscriptionDataResponsesAsObservable().Subscribe(async log =>
-                    {
-                        Console.WriteLine("[DEV-INF] Decoding a update position event ...");
-                        var decodedUpdatePosition = Event<UpdatePositionDTO>.DecodeEvent(log);
-                        string key = Encoding.UTF8.GetString(decodedUpdatePosition.Event.Key);
-                        if (!eventStatus.ContainsKey(key))
-                        {
-                            eventStatus[key] = new TaskCompletionSource<bool>();
-                            await eventStatus.GetValue(key).Task;
-                        }
-                        var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-                        Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
-                        PositionDetail lastState = foundPosition.PositionDetails.Last();
-                        switch (lastState.PositionState)
-                        {
-                            case PositionState.Open:
-                                {
-                                    foundPosition.Size = decodedUpdatePosition.Event.Size.ToString();
-                                    lastState.EntryInterestRate = decodedUpdatePosition.Event.EntryInterestRate.ToString();
-                                    break;
-                                }
-                            case PositionState.Increase:
-                                {
-                                    foundPosition.Size = decodedUpdatePosition.Event.Size.ToString();
-                                    lastState.EntryInterestRate = decodedUpdatePosition.Event.EntryInterestRate.ToString();
-                                    break;
-                                }
-                            case PositionState.Decrease:
-                                {
-                                    foundPosition.Size = decodedUpdatePosition.Event.Size.ToString();
-                                    lastState.EntryInterestRate = decodedUpdatePosition.Event.EntryInterestRate.ToString();
-                                    break;
-                                }
-                        }
-                        _unitOfWork.PositionRepository.Update(foundPosition);
-                        _unitOfWork.PositionDetailRepository.Update(lastState);
-                        await _unitOfWork.SaveAsync();
-                        _unitOfWork.Dispose();
-                    });
 
                     closePositionSubscription.GetSubscriptionDataResponsesAsObservable().Subscribe(async log =>
                     {
                         Console.WriteLine("[DEV-INF] Decoding a close position event ...");
-                        var decodedClosePosition = Event<ClosePositionDTO>.DecodeEvent(log);
+                        var decodedClosePosition = Event<FDexClosePositionDTO>.DecodeEvent(log);
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                         string key = Encoding.UTF8.GetString(decodedClosePosition.Event.Key);
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
@@ -368,7 +332,7 @@ namespace FDex.Application.Services
                     await reporterPostedSubscription.SubscribeAsync(reporterPostedFilterInput);
                     await increasePositionSubscription.SubscribeAsync(increasePositionFilterInput);
                     await decreasePositionSubscription.SubscribeAsync(decreasePositionFilterInput);
-                    await updatePositionSubscription.SubscribeAsync(updatePositionFilterInput);
+                    await openPositionSubscription.SubscribeAsync(openPositionFilterInput);
                     await closePositionSubscription.SubscribeAsync(closePositionFilterInput);
                     await liquidatePositionSubscription.SubscribeAsync(liquidatePositionFilterInput);
                     while (true)
@@ -382,9 +346,9 @@ namespace FDex.Application.Services
                             await reporterAddedSubscription.UnsubscribeAsync();
                             await reporterRemovedSubscription.UnsubscribeAsync();
                             await reporterPostedSubscription.UnsubscribeAsync();
+                            await openPositionSubscription.UnsubscribeAsync();
                             await increasePositionSubscription.UnsubscribeAsync();
                             await decreasePositionSubscription.UnsubscribeAsync();
-                            await updatePositionSubscription.UnsubscribeAsync();
                             await closePositionSubscription.UnsubscribeAsync();
                             await liquidatePositionSubscription.UnsubscribeAsync();
                             await client.StopAsync();
@@ -393,9 +357,9 @@ namespace FDex.Application.Services
                             await reporterAddedSubscription.SubscribeAsync(reporterAddedFilterInput);
                             await reporterRemovedSubscription.SubscribeAsync(reporterRemovedFilterInput);
                             await reporterPostedSubscription.SubscribeAsync(reporterPostedFilterInput);
+                            await openPositionSubscription.SubscribeAsync(openPositionFilterInput);
                             await increasePositionSubscription.SubscribeAsync(increasePositionFilterInput);
                             await decreasePositionSubscription.SubscribeAsync(decreasePositionFilterInput);
-                            await updatePositionSubscription.SubscribeAsync(updatePositionFilterInput);
                             await closePositionSubscription.SubscribeAsync(closePositionFilterInput);
                             await liquidatePositionSubscription.SubscribeAsync(liquidatePositionFilterInput);
                         }
