@@ -53,6 +53,13 @@
     <None Remove="Features\Users\Handlers\Queries\" />
     <None Remove="DTOs\TradingPosition\" />
     <None Remove="Models\Application\" />
+    <None Remove="Features\Positions\" />
+    <None Remove="Features\Positions\Handlers\" />
+    <None Remove="Features\Positions\Requests\" />
+    <None Remove="Features\Positions\Handlers\Commands\" />
+    <None Remove="Features\Positions\Requests\Commands\" />
+    <None Remove="Features\Positions\Requests\Queries\" />
+    <None Remove="Features\Positions\Handlers\Queries\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Contracts\" />
@@ -101,6 +108,13 @@
     <Folder Include="Features\Users\Handlers\Queries\" />
     <Folder Include="DTOs\TradingPosition\" />
     <Folder Include="Models\Application\" />
+    <Folder Include="Features\Positions\" />
+    <Folder Include="Features\Positions\Handlers\" />
+    <Folder Include="Features\Positions\Requests\" />
+    <Folder Include="Features\Positions\Handlers\Commands\" />
+    <Folder Include="Features\Positions\Requests\Commands\" />
+    <Folder Include="Features\Positions\Requests\Queries\" />
+    <Folder Include="Features\Positions\Handlers\Queries\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FDex.Domain\FDex.Domain.csproj" />

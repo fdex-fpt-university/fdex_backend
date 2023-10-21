@@ -26,8 +26,7 @@ namespace FDex.Application.Services
         private readonly IMapper _mapper;
         private readonly List<string> _wss;
         private int currentWssIndex;
-        private bool _increasePositionProcessed = false;
-        TaskCompletionSource<object> increasePositionCompletionSource = new TaskCompletionSource<object>();
+        Dictionary<string, TaskCompletionSource<bool>> eventStatus = new();
 
         public EventDispatcherService(IServiceProvider serviceProvider, IMapper mapper)
         {
@@ -198,6 +197,10 @@ namespace FDex.Application.Services
                             await _unitOfWork.UserRepository.AddAsync(user);
                         }
                         string key = Encoding.UTF8.GetString(decodedIncreasePosition.Event.Key);
+                        if (!eventStatus.ContainsKey(key))
+                        {
+                            eventStatus[key] = new TaskCompletionSource<bool>();
+                        }
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
                         if (foundPosition == null)
                         {
@@ -224,7 +227,6 @@ namespace FDex.Application.Services
                                 Time = DateTime.Now
                             };
                             await _unitOfWork.PositionDetailRepository.AddAsync(posd);
-
                         }
                         else
                         {
@@ -246,8 +248,7 @@ namespace FDex.Application.Services
                         }
                         await _unitOfWork.SaveAsync();
                         _unitOfWork.Dispose();
-                        _increasePositionProcessed = true;
-                        increasePositionCompletionSource.SetResult(null);
+                        eventStatus[key].SetResult(true);
                     });
 
                     decreasePositionSubscription.GetSubscriptionDataResponsesAsObservable().Subscribe(async log =>
@@ -256,6 +257,10 @@ namespace FDex.Application.Services
                         var decodedDecreasePosition = Event<DecreasePositionDTO>.DecodeEvent(log);
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                         string key = Encoding.UTF8.GetString(decodedDecreasePosition.Event.Key);
+                        if (!eventStatus.ContainsKey("!" + key))
+                        {
+                            eventStatus["!" + key] = new TaskCompletionSource<bool>();
+                        }
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
                         foundPosition.Size = (BigInteger.Parse(foundPosition.Size) - decodedDecreasePosition.Event.SizeChanged).ToString();
                         PositionDetail posd = new()
@@ -272,18 +277,20 @@ namespace FDex.Application.Services
                         await _unitOfWork.PositionDetailRepository.AddAsync(posd);
                         await _unitOfWork.SaveAsync();
                         _unitOfWork.Dispose();
+                        eventStatus["!" + key].SetResult(true);
                     });
 
                     updatePositionSubscription.GetSubscriptionDataResponsesAsObservable().Subscribe(async log =>
                     {
                         Console.WriteLine("[DEV-INF] Decoding a update position event ...");
-                        if (!_increasePositionProcessed)
-                        {
-                            await increasePositionCompletionSource.Task;
-                        }
                         var decodedUpdatePosition = Event<UpdatePositionDTO>.DecodeEvent(log);
-                        var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                         string key = Encoding.UTF8.GetString(decodedUpdatePosition.Event.Key);
+                        if (!eventStatus.ContainsKey(key))
+                        {
+                            eventStatus[key] = new TaskCompletionSource<bool>();
+                            await eventStatus.GetValue(key).Task;
+                        }
+                        var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
                         PositionDetail lastState = foundPosition.PositionDetails.Last();
                         switch (lastState.PositionState)

@@ -27,7 +27,7 @@ namespace FDex.Api.Controllers
         [HttpPost("[action]")]
         public async Task<bool> PostReferredUser([FromBody] UpdateReferredUserCommand command)
         {
-            var commandrs = new UpdateReferredUserCommand() { ReferringUser = command.ReferringUser, ReferralUser = command.ReferralUser };
+            command = new UpdateReferredUserCommand() { ReferringUser = command.ReferringUser, ReferralUser = command.ReferralUser };
             await _mediator.Send(command);
             return true;
         }
