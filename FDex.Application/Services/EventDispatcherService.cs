@@ -288,7 +288,7 @@ namespace FDex.Application.Services
                         if (!eventStatus.ContainsKey(key))
                         {
                             eventStatus[key] = new TaskCompletionSource<bool>();
-                            await eventStatus.GetValue(key).Task;
+                            await eventStatus.GetValueOrDefault(key).Task;
                         }
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);

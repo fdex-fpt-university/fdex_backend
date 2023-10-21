@@ -23,9 +23,9 @@ namespace FDex.Application.Features.Positions.Handlers.Queries
             await using var scope = _serviceProvider.CreateAsyncScope();
             var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             var _mapper = scope.ServiceProvider.GetRequiredService<IMapper>();
-            var orders = await _unitOfWork.PositionRepository.GetPositionOrdersInDetails(request.Wallet);
+            var positions = await _unitOfWork.PositionRepository.GetPositionOrdersInDetails(request.Wallet);
             _unitOfWork.Dispose();
-            List<PositionDTOViewOrder> orderDTOs = _mapper.Map<List<PositionDTOViewOrder>>(orders);
+            List<PositionDTOViewOrder> orderDTOs = _mapper.Map<List<PositionDTOViewOrder>>(positions);
             return orderDTOs;
         }
     }
