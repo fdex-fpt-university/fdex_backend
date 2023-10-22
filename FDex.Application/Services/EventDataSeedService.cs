@@ -61,8 +61,6 @@ namespace FDex.Application.Services
             var reporterPostedEventHandler = _web3.Eth.GetEvent<ReporterPostedDTO>(oracleAddress);
             while (!stoppingToken.IsCancellationRequested && _currentReporterBlockNumber <= latestBlockNumber || _currentCommonBlockNumber <= latestBlockNumber)
             {
-                //34002213
-                //34115291
                 BlockParameter startCommonBlock = HandleBlockParameter(COMMON_CONTRACT);
                 BlockParameter endCommonBlock = HandleBlockParameter(COMMON_CONTRACT);
                 BlockParameter startReporterBlock = HandleBlockParameter(REPORTER_CONTRACT);

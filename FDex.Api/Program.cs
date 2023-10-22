@@ -5,6 +5,7 @@ using AutoMapper;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using FDex.Application.Services;
+using FDex.Api.Middleware;
 
 internal class Program
 {
@@ -44,6 +45,8 @@ internal class Program
             app.UseSwaggerUI();
             app.UseDeveloperExceptionPage();
         }
+
+        app.UseMiddleware<ExceptionMiddleware>();
 
         app.UseHttpsRedirection();
 

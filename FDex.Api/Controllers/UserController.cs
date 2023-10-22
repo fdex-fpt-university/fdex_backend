@@ -45,6 +45,13 @@ namespace FDex.Api.Controllers
             object info = await _mediator.Send(new GetReferralLevelInformationRequest() { Wallet = wallet });
             return info;
         }
+
+        [HttpGet("[action]")]
+        public async Task<object> GetReferralSystemAnalytics()
+        {
+            object info = await _mediator.Send(new GetReferralSystemAnalyticsRequest());
+            return info;
+        }
     }
 }
 
