@@ -13,13 +13,10 @@ namespace FDex.Application.Profiles
     {
         public PositionEventProfile()
         {
-            CreateMap<PositionDetail,PositionDetailDto>();
             CreateMap<Position, PositionDTOView>();
 
-            CreateMap<PositionDetail, PositionDetailHistoryDto>();
             CreateMap<Position, PositionDTOViewHistory>();
 
-            CreateMap<PositionDetail, PositionDetailViewOrderDto>();
             CreateMap<Position, PositionDTOViewOrder>();
         }
     }

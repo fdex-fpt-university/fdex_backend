@@ -4,10 +4,11 @@ using FDex.Application.Contracts.Persistence;
 using FDex.Domain.Entities;
 using FDex.Persistence.DbContexts;
 using Microsoft.EntityFrameworkCore;
+using NBitcoin.Secp256k1;
 
 namespace FDex.Persistence.Repositories
 {
-	public class UserRepository : GenericRepository<User>, IUserRepository
+    public class UserRepository : GenericRepository<User>, IUserRepository
 	{
         public readonly FDexDbContext _context;
 
@@ -53,6 +54,15 @@ namespace FDex.Persistence.Repositories
                 TotalTradingVolumnChange = totalTradingVolumnChange.ToString()
             };
             return dashboardItemDatas;
+        }
+
+        public async Task<List<User>> GetReferredUsers(string wallet)
+        {
+            List<User> referredUsers = await _context.Users
+                .Where(u => u.Wallet == wallet)
+                .SelectMany(u => u.ReferredUsers)
+                .ToListAsync();
+            return referredUsers;
         }
     }
 }
