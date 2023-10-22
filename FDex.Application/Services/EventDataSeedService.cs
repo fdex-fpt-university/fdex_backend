@@ -26,11 +26,13 @@ namespace FDex.Application.Services
         private readonly IServiceProvider _serviceProvider;
         private readonly IMapper _mapper;
         private readonly Web3 _web3;
+        private const string COMMON_CONTRACT = "Common";
+        private const string REPORTER_CONTRACT = "Reporter";
 
         bool isFirstParam = true;
-        private static BigInteger _currentReporterBlockNumber = 33502213;
-        private static BigInteger _currentCommonBlockNumber = 34115291;
-        private static BigInteger _limitBlockNumber = 9999;
+        private BigInteger _currentReporterBlockNumber = 34002213;
+        private BigInteger _currentCommonBlockNumber = 34115291;
+        private BigInteger _limitBlockNumber = 9999;
         const string RPC_URL = "https://bsc.getblock.io/c9c2311d-f632-47b1-ae8f-7cde9cd02fba/testnet/";
 
         public EventDataSeedService(IMapper mapper, IServiceProvider serviceProvider)
@@ -59,10 +61,12 @@ namespace FDex.Application.Services
             var reporterPostedEventHandler = _web3.Eth.GetEvent<ReporterPostedDTO>(oracleAddress);
             while (!stoppingToken.IsCancellationRequested && _currentReporterBlockNumber <= latestBlockNumber || _currentCommonBlockNumber <= latestBlockNumber)
             {
-                BlockParameter startCommonBlock = HandleBlockParameter(_currentCommonBlockNumber);
-                BlockParameter endCommonBlock = HandleBlockParameter(_currentCommonBlockNumber);
-                BlockParameter startReporterBlock = HandleBlockParameter(_currentReporterBlockNumber);
-                BlockParameter endReporterBlock = HandleBlockParameter(_currentReporterBlockNumber);
+                //34002213
+                //34115291
+                BlockParameter startCommonBlock = HandleBlockParameter(COMMON_CONTRACT);
+                BlockParameter endCommonBlock = HandleBlockParameter(COMMON_CONTRACT);
+                BlockParameter startReporterBlock = HandleBlockParameter(REPORTER_CONTRACT);
+                BlockParameter endReporterBlock = HandleBlockParameter(REPORTER_CONTRACT);
 
                 var filterAllSwapEvents = swapEventHandler.CreateFilterInput(startCommonBlock, endCommonBlock);
                 var filterAllAddLiquidity = addLiquidityEventHandler.CreateFilterInput(startCommonBlock, endCommonBlock);
@@ -300,6 +304,7 @@ namespace FDex.Application.Services
                             SizeChanged = log.Event.Size.ToString(),
                             Time = DateTime.Now
                         };
+                        await _unitOfWork.PositionDetailRepository.AddAsync(posd);
                         await _unitOfWork.SaveAsync();
                         _unitOfWork.Dispose();
                     }
@@ -320,6 +325,7 @@ namespace FDex.Application.Services
                             Pnl = log.Event.Pnl.Sig == 1 ? log.Event.Pnl.Abs.ToString() : (~log.Event.Pnl.Abs + 1).ToString(),
                             Time = DateTime.Now
                         };
+                        await _unitOfWork.PositionDetailRepository.AddAsync(posd);
                         await _unitOfWork.SaveAsync();
                         _unitOfWork.Dispose();
                     }
@@ -327,16 +333,36 @@ namespace FDex.Application.Services
             }
         }
 
-        private BlockParameter HandleBlockParameter(BigInteger blockNumber)
+        private BlockParameter HandleBlockParameter(string contract)
         {
             if (isFirstParam)
             {
-                blockNumber += 1;
-                isFirstParam = !isFirstParam;
-                return new BlockParameter(new HexBigInteger(blockNumber));
+                if (contract.Equals(COMMON_CONTRACT))
+                {
+                    _currentCommonBlockNumber += 1;
+                    isFirstParam = !isFirstParam;
+                    return new BlockParameter(new HexBigInteger(_currentCommonBlockNumber));
+                }
+                else
+                {
+                    _currentReporterBlockNumber += 1;
+                    isFirstParam = !isFirstParam;
+                    return new BlockParameter(new HexBigInteger(_currentReporterBlockNumber));
+                }
+                
             }
-            blockNumber += _limitBlockNumber;
-            return new BlockParameter(new HexBigInteger(blockNumber));
+            if (contract.Equals(COMMON_CONTRACT))
+            {
+                _currentCommonBlockNumber += _limitBlockNumber;
+                isFirstParam = !isFirstParam;
+                return new BlockParameter(new HexBigInteger(_currentCommonBlockNumber));
+            }
+            else
+            {
+                _currentReporterBlockNumber += _limitBlockNumber;
+                isFirstParam = !isFirstParam;
+                return new BlockParameter(new HexBigInteger(_currentReporterBlockNumber));
+            }
         }
     }
 }

@@ -289,6 +289,7 @@ namespace FDex.Application.Services
                             SizeChanged = decodedClosePosition.Event.Size.ToString(),
                             Time = DateTime.Now
                         };
+                        await _unitOfWork.PositionDetailRepository.AddAsync(posd);
                         await _unitOfWork.SaveAsync();
                         _unitOfWork.Dispose();
                     });
@@ -310,6 +311,7 @@ namespace FDex.Application.Services
                             Pnl = decodedLiquidatePosition.Event.Pnl.Sig == 1 ? decodedLiquidatePosition.Event.Pnl.Abs.ToString() : (~decodedLiquidatePosition.Event.Pnl.Abs + 1).ToString(),
                             Time = DateTime.Now
                         };
+                        await _unitOfWork.PositionDetailRepository.AddAsync(posd);
                         await _unitOfWork.SaveAsync();
                         _unitOfWork.Dispose();
                     });
