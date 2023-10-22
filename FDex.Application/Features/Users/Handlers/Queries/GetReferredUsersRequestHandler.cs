@@ -29,7 +29,8 @@ namespace FDex.Application.Features.Users.Handlers.Queries
                     object refUser = new
                     {
                         Wallet = user.Wallet,
-                        ReferralPoint = user.TradePoint
+                        ReferralPoint = user.TradePoint,
+                        ReferredDate = DateTime.Now
                     };
                     response.Add(refUser);
                 }

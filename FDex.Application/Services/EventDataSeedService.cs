@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using System.Text;
 using AutoMapper;
 using FDex.Application.Contracts.Persistence;
 using FDex.Application.DTOs.Liquidity;
@@ -8,6 +9,7 @@ using FDex.Application.DTOs.Swap;
 using FDex.Application.DTOs.TradingPosition;
 using FDex.Application.Enumerations;
 using FDex.Domain.Entities;
+using FDex.Domain.Enumerations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Nethereum.Contracts;
@@ -196,22 +198,130 @@ namespace FDex.Application.Services
 
                     foreach (var log in openPositionEvents)
                     {
+                        Console.WriteLine("[DEV-INF] Decoding an open position event ...");
+                        var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                        var foundUser = await _unitOfWork.UserRepository.FindAsync(log.Event.Wallet);
+                        if (foundUser == null)
+                        {
+                            User user = new()
+                            {
+                                Wallet = log.Event.Wallet,
+                                CreatedDate = DateTime.Now
+                            };
+                            await _unitOfWork.UserRepository.AddAsync(user);
+                        }
+                        string key = Encoding.UTF8.GetString(log.Event.Key);
+                        Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
+                        if (foundPosition == null)
+                        {
+                            Position pos = new()
+                            {
+                                Id = Guid.NewGuid(),
+                                Key = key,
+                                Wallet = log.Event.Wallet,
+                                CollateralToken = log.Event.CollateralToken,
+                                IndexToken = log.Event.IndexToken,
+                                Side = log.Event.Side == '1',
+                            };
+                            await _unitOfWork.PositionRepository.AddAsync(pos);
+                            PositionDetail posd = new()
+                            {
+                                Id = Guid.NewGuid(),
+                                PositionId = pos.Id,
+                                CollateralValue = log.Event.CollateralValue.ToString(),
+                                IndexPrice = log.Event.IndexPrice.ToString(),
+                                PositionState = PositionState.Open,
+                                SizeChanged = log.Event.SizeChanged.ToString(),
+                                FeeValue = log.Event.FeeValue.ToString(),
+                                Time = DateTime.Now
+                            };
+                            await _unitOfWork.PositionDetailRepository.AddAsync(posd);
+                        }
+                        await _unitOfWork.SaveAsync();
+                        _unitOfWork.Dispose();
                     }
 
                     foreach (var log in increasePositionEvents)
                     {
+                        Console.WriteLine("[DEV-INF] Decoding an increase position event ...");
+                        var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                        string key = Encoding.UTF8.GetString(log.Event.Key);
+                        Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
+                        PositionDetail posd = new()
+                        {
+                            Id = Guid.NewGuid(),
+                            PositionId = foundPosition.Id,
+                            CollateralValue = log.Event.CollateralValue.ToString(),
+                            IndexPrice = log.Event.IndexPrice.ToString(),
+                            PositionState = PositionState.Increase,
+                            SizeChanged = log.Event.SizeChanged.ToString(),
+                            FeeValue = log.Event.FeeValue.ToString(),
+                            Time = DateTime.Now
+                        };
+                        await _unitOfWork.PositionDetailRepository.AddAsync(posd);
+                        await _unitOfWork.SaveAsync();
+                        _unitOfWork.Dispose();
                     }
 
                     foreach (var log in decreasePositionEvents)
                     {
+                        Console.WriteLine("[DEV-INF] Decoding a decrease position event ...");
+                        var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                        string key = Encoding.UTF8.GetString(log.Event.Key);
+                        Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
+                        PositionDetail posd = new()
+                        {
+                            Id = Guid.NewGuid(),
+                            PositionId = foundPosition.Id,
+                            CollateralValue = (~log.Event.CollateralChanged + 1).ToString(),
+                            IndexPrice = log.Event.IndexPrice.ToString(),
+                            PositionState = PositionState.Decrease,
+                            SizeChanged = log.Event.SizeChanged.ToString(),
+                            FeeValue = log.Event.FeeValue.ToString(),
+                            Time = DateTime.Now
+                        };
+                        await _unitOfWork.PositionDetailRepository.AddAsync(posd);
+                        await _unitOfWork.SaveAsync();
+                        _unitOfWork.Dispose();
                     }
 
                     foreach (var log in closePositionEvents)
                     {
+                        Console.WriteLine("[DEV-INF] Decoding a close position event ...");
+                        var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                        string key = Encoding.UTF8.GetString(log.Event.Key);
+                        Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
+                        PositionDetail posd = new()
+                        {
+                            Id = Guid.NewGuid(),
+                            PositionId = foundPosition.Id,
+                            CollateralValue = (~log.Event.CollateralValue + 1).ToString(),
+                            PositionState = PositionState.Close,
+                            SizeChanged = log.Event.Size.ToString(),
+                            Time = DateTime.Now
+                        };
+                        await _unitOfWork.SaveAsync();
+                        _unitOfWork.Dispose();
                     }
 
                     foreach (var log in liquidatePositionEvents)
                     {
+                        Console.WriteLine("[DEV-INF] Decoding a liquidate position event ...");
+                        var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                        string key = Encoding.UTF8.GetString(log.Event.Key);
+                        Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
+                        PositionDetail posd = new()
+                        {
+                            Id = Guid.NewGuid(),
+                            PositionId = foundPosition.Id,
+                            CollateralValue = (~log.Event.CollateralValue + 1).ToString(),
+                            PositionState = PositionState.Liquidate,
+                            SizeChanged = log.Event.Size.ToString(),
+                            Pnl = log.Event.Pnl.Sig == 1 ? log.Event.Pnl.Abs.ToString() : (~log.Event.Pnl.Abs + 1).ToString(),
+                            Time = DateTime.Now
+                        };
+                        await _unitOfWork.SaveAsync();
+                        _unitOfWork.Dispose();
                     }
                 }
             }
