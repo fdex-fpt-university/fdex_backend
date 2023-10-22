@@ -13,6 +13,7 @@ namespace FDex.Persistence.Repositories
         private IReporterRepository _reporterRepository;
         private IAddLiquidityRepository _addLiquidityRepository;
         private IPositionRepository _positionRepository;
+        private IPositionDetailRepository _positionDetailRepository;
 
         public UnitOfWork(FDexDbContext context)
         {
@@ -24,6 +25,7 @@ namespace FDex.Persistence.Repositories
         public IReporterRepository ReporterRepository => _reporterRepository ??= new ReporterRepository(_context);
         public IAddLiquidityRepository AddLiquidityRepository => _addLiquidityRepository ??= new AddLiquidityRepository(_context);
         public IPositionRepository PositionRepository => _positionRepository ??= new PositionRepository(_context);
+        public IPositionDetailRepository PositionDetailRepository => _positionDetailRepository ??= new PositionDetailRepository(_context);
 
         protected virtual void Dispose(bool disposing)
         {

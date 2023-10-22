@@ -6,21 +6,15 @@ namespace FDex.Domain.Entities
 {
 	public class Position
 	{
+        public Guid Id { get; set; }
 		public string Key { get; set; }
 		public string Wallet { get; set; }
 		public string CollateralToken { get; set; }
 		public string IndexToken { get; set; }
-        public string CollateralValue { get; set; }
-        public string SizeChanged { get; set; }
-        public string Side { get; set; }
-        public string IndexPrice { get; set; }
-        public string FeeValue { get; set; }
-        public bool IsLiquidated { get; set; } = false;
-        public bool IsClosed { get; set; } = false;
-        public DateTime OpenTime { get; set; }
-        public DateTime? CloseTime { get; set; }
+        public bool Side { get; set; }
 
         public User User { get; set; }
+        public ICollection<PositionDetail>? PositionDetails { get; set; }
     }
 }
 

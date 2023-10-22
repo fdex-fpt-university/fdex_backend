@@ -18,18 +18,39 @@ namespace FDex.Api.Controllers
         }
 
         [HttpGet("[action]")]
-        public async Task<ActionResult<bool>> GetAccountStatus([FromBody] string wallet)
+        public async Task<ActionResult<bool>> GetAccountStatus([FromQuery] string wallet)
         {
             bool accountStatus = await _mediator.Send(new GetAccountStatusRequest() { Wallet = wallet});
             return Ok(accountStatus);
         }
 
-        [HttpPost("[action]/{referralUser}")]
-        public async Task<ActionResult> PostReferredUser([FromBody] string referringUser, string referralUser)
+        [HttpPost("[action]")]
+        public async Task<bool> PostReferredUser([FromBody] UpdateReferredUserCommand command)
         {
-            var command = new UpdateReferredUserCommand() { ReferringUser = referringUser, ReferralUser = referralUser };
+            command = new UpdateReferredUserCommand() { ReferringUser = command.ReferringUser, ReferralUser = command.ReferralUser };
             await _mediator.Send(command);
-            return Ok();
+            return true;
+        }
+
+        [HttpGet("[action]")]
+        public async Task<List<object>> GetReferredUsers(string wallet)
+        {
+            List<object> users =  await _mediator.Send(new GetReferredUsersRequest() { Wallet = wallet });
+            return users;
+        }
+
+        [HttpGet("[action]")]
+        public async Task<object> GetReferralLevelInformation(string wallet)
+        {
+            object info = await _mediator.Send(new GetReferralLevelInformationRequest() { Wallet = wallet });
+            return info;
+        }
+
+        [HttpGet("[action]")]
+        public async Task<object> GetReferralSystemAnalytics()
+        {
+            object info = await _mediator.Send(new GetReferralSystemAnalyticsRequest());
+            return info;
         }
     }
 }
