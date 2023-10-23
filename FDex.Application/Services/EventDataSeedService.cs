@@ -33,7 +33,7 @@ namespace FDex.Application.Services
         private BigInteger _currentReporterBlockNumber = 34002213;
         private BigInteger _currentCommonBlockNumber = 34115291;
         private BigInteger _limitBlockNumber = 9999;
-        const string RPC_URL = "https://bsc.getblock.io/c9c2311d-f632-47b1-ae8f-7cde9cd02fba/testnet/";
+        const string RPC_URL = "https://sly-long-cherry.bsc-testnet.quiknode.pro/4ac0090884736ecd32a595fe2ec55910ca239cdb/";
 
         public EventDataSeedService(IMapper mapper, IServiceProvider serviceProvider)
         {
@@ -77,50 +77,44 @@ namespace FDex.Application.Services
                 var filterAllClosePosition = closePositionEventHandler.CreateFilterInput(startCommonBlock, endCommonBlock);
                 var filterAllLiquidatePosition = liquidatePositionEventHandler.CreateFilterInput(startCommonBlock, endCommonBlock);
 
-                //if (_currentReporterBlockNumber <= latestBlockNumber)
-                //{
-                //    var reporterAddedEvents = await reporterAddedEventHandler.GetAllChangesAsync(filterAllReporterAdded);
-                //    var reporterRemovedEvents = await reporterRemovedEventHandler.GetAllChangesAsync(filterAllReporterRemoved);
-                //    var reporterPostedEvents = await reporterPostedEventHandler.GetAllChangesAsync(filterAllReporterPosted);
-                //    foreach (var log in reporterAddedEvents)
-                //    {
-                //        var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-                //        var foundReporterAdded = await _unitOfWork.ReporterRepository.FindAsync(log.Event.Wallet);
-                //        if (foundReporterAdded == null)
-                //        {
-                //            await _unitOfWork.ReporterRepository.AddAsync(new Reporter { Wallet = log.Event.Wallet, ReportCount = 0 });
-                //        }
-                //        await _unitOfWork.SaveAsync();
-                //        _unitOfWork.Dispose();
-                //    }
+                if (_currentReporterBlockNumber <= latestBlockNumber)
+                {
+                    var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                    var reporterAddedEvents = await reporterAddedEventHandler.GetAllChangesAsync(filterAllReporterAdded);
+                    var reporterRemovedEvents = await reporterRemovedEventHandler.GetAllChangesAsync(filterAllReporterRemoved);
+                    var reporterPostedEvents = await reporterPostedEventHandler.GetAllChangesAsync(filterAllReporterPosted);
+                    foreach (var log in reporterAddedEvents)
+                    {
+                        var foundReporterAdded = await _unitOfWork.ReporterRepository.FindAsync(log.Event.Wallet);
+                        if (foundReporterAdded == null)
+                        {
+                            await _unitOfWork.ReporterRepository.AddAsync(new Reporter { Wallet = log.Event.Wallet, ReportCount = 0 });
+                        }
+                    }
 
-                //    foreach (var log in reporterRemovedEvents)
-                //    {
-                //        var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-                //        var foundReporterRemoved = await _unitOfWork.ReporterRepository.FindAsync(log.Event.Wallet);
-                //        if (foundReporterRemoved != null)
-                //        {
-                //            _unitOfWork.ReporterRepository.Remove(foundReporterRemoved);
-                //        }
-                //        await _unitOfWork.SaveAsync();
-                //        _unitOfWork.Dispose();
-                //    }
+                    foreach (var log in reporterRemovedEvents)
+                    {
+                        var foundReporterRemoved = await _unitOfWork.ReporterRepository.FindAsync(log.Event.Wallet);
+                        if (foundReporterRemoved != null)
+                        {
+                            _unitOfWork.ReporterRepository.Remove(foundReporterRemoved);
+                        }
+                    }
 
-                //    foreach (var log in reporterPostedEvents)
-                //    {
-                //        var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-                //        var foundReporterPosted = await _unitOfWork.ReporterRepository.FindAsync(log.Event.Wallet);
-                //        if (foundReporterPosted != null)
-                //        {
-                //            Reporter postingReporter = await _unitOfWork.ReporterRepository.FindAsync(log.Event.Wallet);
-                //            postingReporter.ReportCount += 1;
-                //            postingReporter.LastReportedDate = DateTime.Now;
-                //            _unitOfWork.ReporterRepository.Update(postingReporter);
-                //        }
-                //        await _unitOfWork.SaveAsync();
-                //        _unitOfWork.Dispose();
-                //    }
-                //}
+                    foreach (var log in reporterPostedEvents)
+                    {
+                        var foundReporterPosted = await _unitOfWork.ReporterRepository.FindAsync(log.Event.Wallet);
+                        if (foundReporterPosted != null)
+                        {
+                            Reporter postingReporter = await _unitOfWork.ReporterRepository.FindAsync(log.Event.Wallet);
+                            postingReporter.ReportCount += 1;
+                            postingReporter.LastReportedDate = DateTime.Now;
+                            _unitOfWork.ReporterRepository.Update(postingReporter);
+                        }
+                    }
+                    await _unitOfWork.SaveAsync();
+                    _unitOfWork.Dispose();
+                }
 
                 if (_currentCommonBlockNumber <= latestBlockNumber)
                 {
@@ -212,7 +206,7 @@ namespace FDex.Application.Services
                             };
                             await _unitOfWork.UserRepository.AddAsync(user);
                         }
-                        string key = Encoding.UTF8.GetString(log.Event.Key);
+                        string key = BitConverter.ToString(log.Event.Key).Replace("-", "");
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
                         if (foundPosition == null)
                         {
@@ -247,7 +241,7 @@ namespace FDex.Application.Services
                     {
                         Console.WriteLine("[DEV-INF] Decoding an increase position event ...");
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-                        string key = Encoding.UTF8.GetString(log.Event.Key);
+                        string key = BitConverter.ToString(log.Event.Key).Replace("-", "");
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
                         PositionDetail posd = new()
                         {
@@ -269,7 +263,7 @@ namespace FDex.Application.Services
                     {
                         Console.WriteLine("[DEV-INF] Decoding a decrease position event ...");
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-                        string key = Encoding.UTF8.GetString(log.Event.Key);
+                        string key = BitConverter.ToString(log.Event.Key).Replace("-", "");
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
                         PositionDetail posd = new()
                         {
@@ -291,7 +285,7 @@ namespace FDex.Application.Services
                     {
                         Console.WriteLine("[DEV-INF] Decoding a close position event ...");
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-                        string key = Encoding.UTF8.GetString(log.Event.Key);
+                        string key = BitConverter.ToString(log.Event.Key).Replace("-", "");
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
                         PositionDetail posd = new()
                         {
@@ -311,7 +305,7 @@ namespace FDex.Application.Services
                     {
                         Console.WriteLine("[DEV-INF] Decoding a liquidate position event ...");
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-                        string key = Encoding.UTF8.GetString(log.Event.Key);
+                        string key = BitConverter.ToString(log.Event.Key).Replace("-", "");
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
                         PositionDetail posd = new()
                         {
@@ -347,7 +341,7 @@ namespace FDex.Application.Services
                     isFirstParam = !isFirstParam;
                     return new BlockParameter(new HexBigInteger(_currentReporterBlockNumber));
                 }
-                
+
             }
             if (contract.Equals(COMMON_CONTRACT))
             {
