@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Numerics;
 using System.Text;
 using AutoMapper;
@@ -195,7 +196,7 @@ namespace FDex.Application.Services
                             };
                             await _unitOfWork.UserRepository.AddAsync(user);
                         }
-                        string key = Encoding.UTF8.GetString(decodedOpenPosition.Event.Key);
+                        string key = BitConverter.ToString(decodedOpenPosition.Event.Key).Replace("-", "");
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
                         if (foundPosition == null)
                         {
@@ -231,7 +232,7 @@ namespace FDex.Application.Services
                         Console.WriteLine("[DEV-INF] Decoding an increase position event ...");
                         var decodedIncreasePosition = Event<FDexIncreaPositionDTO>.DecodeEvent(log);
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-                        string key = Encoding.UTF8.GetString(decodedIncreasePosition.Event.Key);
+                        string key = BitConverter.ToString(decodedIncreasePosition.Event.Key).Replace("-", "");
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
                         PositionDetail posd = new()
                         {
@@ -254,7 +255,7 @@ namespace FDex.Application.Services
                         Console.WriteLine("[DEV-INF] Decoding a decrease position event ...");
                         var decodedDecreasePosition = Event<FDexDecreaPositionDTO>.DecodeEvent(log);
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-                        string key = Encoding.UTF8.GetString(decodedDecreasePosition.Event.Key);
+                        string key = BitConverter.ToString(decodedDecreasePosition.Event.Key).Replace("-", "");
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
                         PositionDetail posd = new()
                         {
@@ -278,7 +279,7 @@ namespace FDex.Application.Services
                         Console.WriteLine("[DEV-INF] Decoding a close position event ...");
                         var decodedClosePosition = Event<FDexClosePositionDTO>.DecodeEvent(log);
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-                        string key = Encoding.UTF8.GetString(decodedClosePosition.Event.Key);
+                        string key = BitConverter.ToString(decodedClosePosition.Event.Key).Replace("-", "");
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
                         PositionDetail posd = new()
                         {
@@ -299,7 +300,7 @@ namespace FDex.Application.Services
                         Console.WriteLine("[DEV-INF] Decoding a liquidate position event ...");
                         var decodedLiquidatePosition = Event<LiquidatePositionDTO>.DecodeEvent(log);
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-                        string key = Encoding.UTF8.GetString(decodedLiquidatePosition.Event.Key);
+                        string key = BitConverter.ToString(decodedLiquidatePosition.Event.Key).Replace("-", "");
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
                         PositionDetail posd = new()
                         {

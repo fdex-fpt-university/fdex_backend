@@ -113,7 +113,7 @@
     <ProjectReference Include="..\FDex.Domain\FDex.Domain.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.7.1" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.8.0" />
     <PackageReference Include="Nethereum.JsonRpc.Client" Version="4.17.1" />
     <PackageReference Include="Nethereum.Web3" Version="4.17.1" />
     <PackageReference Include="MediatR" Version="12.1.1" />
