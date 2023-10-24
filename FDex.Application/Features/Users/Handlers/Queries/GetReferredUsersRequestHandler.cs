@@ -19,7 +19,7 @@ namespace FDex.Application.Features.Users.Handlers.Queries
         {
             await using var scope = _serviceProvider.CreateAsyncScope();
             var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-            var users = await _unitOfWork.UserRepository.GetReferredUsers(request.Wallet);
+            var users = await _unitOfWork.UserRepository.GetReferredUsers(request.Wallet, request.Page, request.PageSize);
             _unitOfWork.Dispose();
             List<object> response = new();
             if(users != null)
