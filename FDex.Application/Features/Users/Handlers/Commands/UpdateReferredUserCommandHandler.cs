@@ -27,7 +27,6 @@ namespace FDex.Application.Features.Users.Handlers.Commands
                 return false;
             }
             referringUser.ReferredUserOf = request.ReferralUser;
-            referringUser.Level = 0;
             _unitOfWork.UserRepository.Update(referringUser);
             await _unitOfWork.SaveAsync();
             _unitOfWork.Dispose();
