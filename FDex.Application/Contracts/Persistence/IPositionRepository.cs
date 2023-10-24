@@ -11,7 +11,6 @@ namespace FDex.Application.Contracts.Persistence
 
         Task<List<Position>> GetPositionHistoriesInDetails(string wallet);
 
-
         Task<List<Position>> GetPositionsInDetails(string wallet);
     }
 }
