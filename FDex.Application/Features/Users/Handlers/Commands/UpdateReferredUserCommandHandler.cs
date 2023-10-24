@@ -21,6 +21,11 @@ namespace FDex.Application.Features.Users.Handlers.Commands
             await using var scope = _serviceProvider.CreateAsyncScope();
             var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             var referringUser = await _unitOfWork.UserRepository.FindAsync(request.ReferringUser);
+            var referralUser = await _unitOfWork.UserRepository.FindAsync(request.ReferralUser);
+            if (referralUser == null || referringUser == null)
+            {
+                return false;
+            }
             referringUser.ReferredUserOf = request.ReferralUser;
             referringUser.Level = 0;
             _unitOfWork.UserRepository.Update(referringUser);
