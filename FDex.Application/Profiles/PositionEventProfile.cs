@@ -13,11 +13,27 @@ namespace FDex.Application.Profiles
     {
         public PositionEventProfile()
         {
-            CreateMap<Position, PositionDTOView>();
+            CreateMap<Position, PositionDTOView>()
+                .ForMember(dest => dest.CollateralToken, opt => opt.MapFrom(src => src.CollateralToken))
+                .ForMember(dest => dest.IndexToken, opt => opt.MapFrom(src => src.IndexToken))
+                .ForMember(dest => dest.Side, opt => opt.MapFrom(src => src.Side))
+                .ForMember(dest => dest.Size, opt => opt.MapFrom(src => src.Size))
+                .ForMember(dest => dest.EntryPrice, opt => opt.MapFrom(src => src.PositionDetails.FirstOrDefault().EntryPrice));
 
-            CreateMap<Position, PositionDTOViewHistory>();
+            CreateMap<Position, PositionDTOViewHistory>()
+                .ForMember(dest => dest.CollateralToken, opt => opt.MapFrom(src => src.CollateralToken))
+                .ForMember(dest => dest.IndexToken, opt => opt.MapFrom(src => src.IndexToken))
+                .ForMember(dest => dest.Side, opt => opt.MapFrom(src => src.Side))
+                .ForMember(dest => dest.Size, opt => opt.MapFrom(src => src.Size))
+                .ForMember(dest => dest.EntryPrice, opt => opt.MapFrom(src => src.PositionDetails.FirstOrDefault().EntryPrice))
+                .ForMember(dest => dest.Pnl, opt => opt.MapFrom(src => src.PositionDetails.FirstOrDefault().Pnl));
 
-            CreateMap<Position, PositionDTOViewOrder>();
+            CreateMap<Position, PositionDTOViewOrder>()
+                .ForMember(dest => dest.CollateralToken, opt => opt.MapFrom(src => src.CollateralToken))
+                .ForMember(dest => dest.IndexToken, opt => opt.MapFrom(src => src.IndexToken))
+                .ForMember(dest => dest.Side, opt => opt.MapFrom(src => src.Side))
+                .ForMember(dest => dest.Size, opt => opt.MapFrom(src => src.Size))
+                .ForMember(dest => dest.EntryPrice, opt => opt.MapFrom(src => src.PositionDetails.FirstOrDefault().EntryPrice));
         }
     }
 }

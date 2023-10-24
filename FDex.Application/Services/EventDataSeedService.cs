@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Numerics;
 using System.Text;
 using AutoMapper;
@@ -217,6 +218,7 @@ namespace FDex.Application.Services
                                 Wallet = log.Event.Wallet,
                                 CollateralToken = log.Event.CollateralToken,
                                 IndexToken = log.Event.IndexToken,
+                                Size = log.Event.Size.ToString(),
                                 Side = log.Event.Side == '1',
                             };
                             await _unitOfWork.PositionRepository.AddAsync(pos);
@@ -225,7 +227,9 @@ namespace FDex.Application.Services
                                 Id = Guid.NewGuid(),
                                 PositionId = pos.Id,
                                 CollateralValue = log.Event.CollateralValue.ToString(),
+                                EntryPrice = log.Event.EntryPrice.ToString(),
                                 IndexPrice = log.Event.IndexPrice.ToString(),
+                                ReserveAmount = log.Event.ReserveAmount.ToString(),
                                 PositionState = PositionState.Open,
                                 SizeChanged = log.Event.SizeChanged.ToString(),
                                 FeeValue = log.Event.FeeValue.ToString(),
@@ -243,17 +247,21 @@ namespace FDex.Application.Services
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                         string key = BitConverter.ToString(log.Event.Key).Replace("-", "");
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
+                        foundPosition.Size = log.Event.Size.ToString();
                         PositionDetail posd = new()
                         {
                             Id = Guid.NewGuid(),
                             PositionId = foundPosition.Id,
                             CollateralValue = log.Event.CollateralValue.ToString(),
+                            EntryPrice = log.Event.EntryPrice.ToString(),
                             IndexPrice = log.Event.IndexPrice.ToString(),
+                            ReserveAmount = log.Event.ReserveAmount.ToString(),
                             PositionState = PositionState.Increase,
                             SizeChanged = log.Event.SizeChanged.ToString(),
                             FeeValue = log.Event.FeeValue.ToString(),
                             Time = DateTime.Now
                         };
+                        _unitOfWork.PositionRepository.Update(foundPosition);
                         await _unitOfWork.PositionDetailRepository.AddAsync(posd);
                         await _unitOfWork.SaveAsync();
                         _unitOfWork.Dispose();
@@ -265,17 +273,21 @@ namespace FDex.Application.Services
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                         string key = BitConverter.ToString(log.Event.Key).Replace("-", "");
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
+                        foundPosition.Size = log.Event.Size.ToString();
                         PositionDetail posd = new()
                         {
                             Id = Guid.NewGuid(),
                             PositionId = foundPosition.Id,
                             CollateralValue = (~log.Event.CollateralChanged + 1).ToString(),
+                            EntryPrice = log.Event.EntryPrice.ToString(),
                             IndexPrice = log.Event.IndexPrice.ToString(),
+                            ReserveAmount = log.Event.ReserveAmount.ToString(),
                             PositionState = PositionState.Decrease,
                             SizeChanged = log.Event.SizeChanged.ToString(),
                             FeeValue = log.Event.FeeValue.ToString(),
                             Time = DateTime.Now
                         };
+                        _unitOfWork.PositionRepository.Update(foundPosition);
                         await _unitOfWork.PositionDetailRepository.AddAsync(posd);
                         await _unitOfWork.SaveAsync();
                         _unitOfWork.Dispose();
@@ -287,15 +299,20 @@ namespace FDex.Application.Services
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                         string key = BitConverter.ToString(log.Event.Key).Replace("-", "");
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
+                        foundPosition.Size = log.Event.Size.ToString();
                         PositionDetail posd = new()
                         {
                             Id = Guid.NewGuid(),
                             PositionId = foundPosition.Id,
                             CollateralValue = (~log.Event.CollateralValue + 1).ToString(),
+                            EntryPrice = log.Event.EntryPrice.ToString(),
+                            IndexPrice = log.Event.IndexPrice.ToString(),
+                            ReserveAmount = log.Event.ReserveAmount.ToString(),
                             PositionState = PositionState.Close,
                             SizeChanged = log.Event.Size.ToString(),
                             Time = DateTime.Now
                         };
+                        _unitOfWork.PositionRepository.Update(foundPosition);
                         await _unitOfWork.PositionDetailRepository.AddAsync(posd);
                         await _unitOfWork.SaveAsync();
                         _unitOfWork.Dispose();
@@ -307,16 +324,21 @@ namespace FDex.Application.Services
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                         string key = BitConverter.ToString(log.Event.Key).Replace("-", "");
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
+                        foundPosition.Size = log.Event.Size.ToString();
                         PositionDetail posd = new()
                         {
                             Id = Guid.NewGuid(),
                             PositionId = foundPosition.Id,
                             CollateralValue = (~log.Event.CollateralValue + 1).ToString(),
+                            EntryPrice = null,
+                            IndexPrice = log.Event.IndexPrice.ToString(),
+                            ReserveAmount = log.Event.ReserveAmount.ToString(),
                             PositionState = PositionState.Liquidate,
                             SizeChanged = log.Event.Size.ToString(),
                             Pnl = log.Event.Pnl.Sig == 1 ? log.Event.Pnl.Abs.ToString() : (~log.Event.Pnl.Abs + 1).ToString(),
                             Time = DateTime.Now
                         };
+                        _unitOfWork.PositionRepository.Update(foundPosition);
                         await _unitOfWork.PositionDetailRepository.AddAsync(posd);
                         await _unitOfWork.SaveAsync();
                         _unitOfWork.Dispose();
