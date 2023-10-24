@@ -33,11 +33,7 @@ namespace FDex.Api.Controllers
         }
 
         [HttpGet("[action]")]
-        public async Task<List<object>> GetReferredUsers(string wallet)
-        {
-            List<object> users =  await _mediator.Send(new GetReferredUsersRequest() { Wallet = wallet });
-            return users;
-        }
+        public async Task<List<object>> GetReferredUsers([FromQuery] GetReferredUsersRequest query) => await _mediator.Send(query);
 
         [HttpGet("[action]")]
         public async Task<object> GetReferralLevelInformation(string wallet)

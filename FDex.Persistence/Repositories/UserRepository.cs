@@ -81,11 +81,14 @@ namespace FDex.Persistence.Repositories
             return analytic;
         }
 
-        public async Task<List<User>> GetReferredUsers(string wallet)
+        public async Task<List<User>> GetReferredUsers(string wallet, int page, int pageSize)
         {
             List<User> referredUsers = await _context.Users
                 .Where(u => u.Wallet == wallet)
                 .SelectMany(u => u.ReferredUsers)
+                .OrderByDescending(e => e.ReferredUserDate)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
             return referredUsers;
         }
