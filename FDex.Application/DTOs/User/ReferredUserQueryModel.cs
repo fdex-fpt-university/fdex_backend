@@ -11,10 +11,10 @@ namespace FDex.Application.DTOs.User
     {
         public int NumberOfPage { get; set; }
 
-        public List<UserDto> Users { get; set; }
+        public List<UserDTO> Users { get; set; }
     }
 
-    public class UserDto
+    public class UserDTO
     {
         public string Wallet { get; set; }
         public DateTime? ReferredUserDate { get; set; }
