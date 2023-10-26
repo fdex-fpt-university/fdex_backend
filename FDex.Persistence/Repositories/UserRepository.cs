@@ -56,7 +56,7 @@ namespace FDex.Persistence.Repositories
             return dashboardItemDatas;
         }
 
-        public async Task<object> GetReferralAnalytics()
+        public async Task<UserLevelAnalytic> GetReferralAnalytics()
         {
             var levelCounts = new Dictionary<int, int>();
             levelCounts = await _context.Users
@@ -71,7 +71,7 @@ namespace FDex.Persistence.Repositories
                     el => el.Level,
                     el => el.Count
                 );
-            object analytic = new
+            UserLevelAnalytic analytic = new()
             {
                 Level0 = levelCounts.GetValueOrDefault(0),
                 Level1 = levelCounts.GetValueOrDefault(1),
@@ -81,8 +81,12 @@ namespace FDex.Persistence.Repositories
             return analytic;
         }
 
-        public async Task<List<User>> GetReferredUsers(string wallet, int page, int pageSize)
+        public async Task<Dictionary<int, List<User>>> GetReferredUsers(string wallet, int page, int pageSize)
         {
+            Dictionary<int, List<User>> response = new();
+            int count = await _context.Users.Where(u => u.Wallet == wallet)
+                .SelectMany(u => u.ReferredUsers).CountAsync();
+            int numberOfPage = count % pageSize == 0 ? count / pageSize : count / pageSize + 1;
             List<User> referredUsers = await _context.Users
                 .Where(u => u.Wallet == wallet)
                 .SelectMany(u => u.ReferredUsers)
@@ -90,7 +94,8 @@ namespace FDex.Persistence.Repositories
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
-            return referredUsers;
+            response[numberOfPage] = referredUsers;
+            return response;
         }
 
         public async Task<List<User>> GetUsersInDetailsAsync()

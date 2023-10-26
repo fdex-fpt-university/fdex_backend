@@ -3,6 +3,7 @@ using FDex.Application.DTOs.Swap;
 using FDex.Application.DTOs.User;
 using FDex.Application.Features.Users.Requests.Commands;
 using FDex.Application.Features.Users.Requests.Queries;
+using FDex.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -34,7 +35,7 @@ namespace FDex.Api.Controllers
         }
 
         [HttpGet("[action]")]
-        public async Task<List<object>> GetReferredUsers([FromQuery] GetReferredUsersRequest query) => await _mediator.Send(query);
+        public async Task<Dictionary<int, List<object>>> GetReferredUsers([FromQuery] GetReferredUsersRequest query) => await _mediator.Send(query);
 
         [HttpGet("[action]")]
         public async Task<object> GetReferralLevelInformation(string wallet)
@@ -44,9 +45,9 @@ namespace FDex.Api.Controllers
         }
 
         [HttpGet("[action]")]
-        public async Task<object> GetReferralSystemAnalytics()
+        public async Task<UserLevelAnalytic> GetReferralSystemAnalytics()
         {
-            object info = await _mediator.Send(new GetReferralSystemAnalyticsRequest());
+            UserLevelAnalytic info = await _mediator.Send(new GetReferralSystemAnalyticsRequest());
             return info;
         }
 

@@ -108,9 +108,11 @@ namespace FDex.Application.Services
                         var foundReporterPosted = await _unitOfWork.ReporterRepository.FindAsync(log.Event.Wallet);
                         if (foundReporterPosted != null)
                         {
+                            //var block = await _web3.Eth.Blocks.GetBlockWithTransactionsByHash.SendRequestAsync(log.Log.TransactionHash);
                             Reporter postingReporter = await _unitOfWork.ReporterRepository.FindAsync(log.Event.Wallet);
                             postingReporter.ReportCount += 1;
                             postingReporter.LastReportedDate = DateTime.Now;
+                            //postingReporter.LastReportedDate = DateTimeOffset.FromUnixTimeSeconds((long)block.Timestamp.ToUlong()).LocalDateTime;
                             _unitOfWork.ReporterRepository.Update(postingReporter);
                         }
                     }
