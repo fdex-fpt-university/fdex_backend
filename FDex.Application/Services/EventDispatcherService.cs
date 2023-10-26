@@ -208,24 +208,42 @@ namespace FDex.Application.Services
                                 CollateralToken = decodedOpenPosition.Event.CollateralToken,
                                 IndexToken = decodedOpenPosition.Event.IndexToken,
                                 Side = decodedOpenPosition.Event.Side == '1',
+                                Size = decodedOpenPosition.Event.Size.ToString(),
                                 Leverage = (int)(decodedOpenPosition.Event.Size / decodedOpenPosition.Event.CollateralValue)
                             };
                             await _unitOfWork.PositionRepository.AddAsync(pos);
+                            PositionDetail posd = new()
+                            {
+                                Id = Guid.NewGuid(),
+                                PositionId = pos.Id,
+                                CollateralValue = decodedOpenPosition.Event.CollateralValue.ToString(),
+                                EntryPrice = decodedOpenPosition.Event.EntryPrice.ToString(),
+                                IndexPrice = decodedOpenPosition.Event.IndexPrice.ToString(),
+                                ReserveAmount = decodedOpenPosition.Event.ReserveAmount.ToString(),
+                                PositionState = PositionState.Open,
+                                SizeChanged = decodedOpenPosition.Event.SizeChanged.ToString(),
+                                FeeValue = decodedOpenPosition.Event.FeeValue.ToString(),
+                                Time = DateTime.Now
+                            };
+                            await _unitOfWork.PositionDetailRepository.AddAsync(posd);
                         }
-                        PositionDetail posd = new()
+                        else
                         {
-                            Id = Guid.NewGuid(),
-                            PositionId = foundPosition.Id,
-                            CollateralValue = decodedOpenPosition.Event.CollateralValue.ToString(),
-                            EntryPrice = decodedOpenPosition.Event.EntryPrice.ToString(),
-                            IndexPrice = decodedOpenPosition.Event.IndexPrice.ToString(),
-                            ReserveAmount = decodedOpenPosition.Event.ReserveAmount.ToString(),
-                            PositionState = PositionState.Open,
-                            SizeChanged = decodedOpenPosition.Event.SizeChanged.ToString(),
-                            FeeValue = decodedOpenPosition.Event.FeeValue.ToString(),
-                            Time = DateTime.Now
-                        };
-                        await _unitOfWork.PositionDetailRepository.AddAsync(posd);
+                            PositionDetail posd = new()
+                            {
+                                Id = Guid.NewGuid(),
+                                PositionId = foundPosition.Id,
+                                CollateralValue = decodedOpenPosition.Event.CollateralValue.ToString(),
+                                EntryPrice = decodedOpenPosition.Event.EntryPrice.ToString(),
+                                IndexPrice = decodedOpenPosition.Event.IndexPrice.ToString(),
+                                ReserveAmount = decodedOpenPosition.Event.ReserveAmount.ToString(),
+                                PositionState = PositionState.Open,
+                                SizeChanged = decodedOpenPosition.Event.SizeChanged.ToString(),
+                                FeeValue = decodedOpenPosition.Event.FeeValue.ToString(),
+                                Time = DateTime.Now
+                            };
+                            await _unitOfWork.PositionDetailRepository.AddAsync(posd);
+                        }
                         await _unitOfWork.SaveAsync();
                         _unitOfWork.Dispose();
                     });
