@@ -12,6 +12,7 @@ namespace FDex.Domain.Entities
 		public string CollateralToken { get; set; }
 		public string IndexToken { get; set; }
 		public string Size { get; set; }
+		public int Leverage { get; set; }
         public bool Side { get; set; }
 
         public User User { get; set; }

@@ -92,5 +92,14 @@ namespace FDex.Persistence.Repositories
                 .ToListAsync();
             return referredUsers;
         }
+
+        public async Task<List<User>> GetUsersInDetailsAsync()
+        {
+            List<User> users = await _context.Users
+                .Include(u => u.Positions)
+                .ThenInclude(p => p.PositionDetails)
+                .ToListAsync();
+            return users;
+        }
     }
 }

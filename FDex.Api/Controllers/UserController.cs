@@ -1,5 +1,6 @@
 ﻿using System;
 using FDex.Application.DTOs.Swap;
+using FDex.Application.DTOs.User;
 using FDex.Application.Features.Users.Requests.Commands;
 using FDex.Application.Features.Users.Requests.Queries;
 using MediatR;
@@ -47,6 +48,17 @@ namespace FDex.Api.Controllers
         {
             object info = await _mediator.Send(new GetReferralSystemAnalyticsRequest());
             return info;
+        }
+
+        [HttpGet("[action]")]
+        public async Task<List<UserDTOLeaderboardItemView>> GetLeaderboard([FromQuery] GetLeaderboardRequest query) => await _mediator.Send(query);
+
+        [HttpPost("[action]")]
+        public async Task<bool> AddUser([FromBody] AddUserCommand command)
+        {
+            command = new AddUserCommand() { Wallet = command.Wallet};
+            await _mediator.Send(command);
+            return true;
         }
     }
 }
