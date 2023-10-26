@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using FDex.Application.Common.Models;
 using FDex.Application.Contracts.Persistence;
 using FDex.Domain.Entities;
 using FDex.Persistence.DbContexts;
@@ -81,7 +82,7 @@ namespace FDex.Persistence.Repositories
             return analytic;
         }
 
-        public async Task<List<User>> GetReferredUsers(string wallet, int page, int pageSize)
+        public async Task<GetUserResponse> GetReferredUsers(string wallet, int page, int pageSize)
         {
             List<User> referredUsers = await _context.Users
                 .Where(u => u.Wallet == wallet)
@@ -90,8 +91,17 @@ namespace FDex.Persistence.Repositories
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
+            int referredUsersCount = await _context.Users.Where(u => u.Wallet == wallet).SelectMany(u => u.ReferredUsers).CountAsync();
 
-            return referredUsers;
+            int numberOfPage = referredUsersCount % pageSize == 0 ? numberOfPage = referredUsersCount / pageSize : numberOfPage = referredUsersCount / pageSize + 1;
+
+            var rs = new GetUserResponse()
+            {
+                Users = referredUsers,
+                NumberOfPage = numberOfPage
+            };
+
+            return rs;
         }
 
         public async Task<List<User>> GetUsersInDetailsAsync()

@@ -23,12 +23,13 @@ namespace FDex.Application.Features.Users.Handlers.Queries
             await using var scope = _serviceProvider.CreateAsyncScope();
             var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             var _mapper = scope.ServiceProvider.GetRequiredService<IMapper>();
-            var users = await _unitOfWork.UserRepository.GetReferredUsers(request.Wallet, request.Page, request.PageSize);
-            int numberOfPage = users.Count % request.PageSize == 0 ? numberOfPage = users.Count / request.PageSize : numberOfPage = users.Count / request.PageSize + 1;
-            var usersMapped = _mapper.Map<List<UserDto>>(users);
+            var usersRes = await _unitOfWork.UserRepository.GetReferredUsers(request.Wallet, request.Page, request.PageSize);
+      
+            var usersMapped = _mapper.Map<List<UserDTO>>(usersRes.Users);
+            _unitOfWork.Dispose();
             return new ReferredUserQueryModel()
             {
-                NumberOfPage = numberOfPage,
+                NumberOfPage = usersRes.NumberOfPage,
                 Users = usersMapped
             };
         }
