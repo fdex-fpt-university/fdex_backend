@@ -1,5 +1,7 @@
 ﻿using System;
+using AutoMapper;
 using FDex.Application.Contracts.Persistence;
+using FDex.Application.DTOs.User;
 using FDex.Application.Features.Users.Requests.Queries;
 using FDex.Domain.Entities;
 using MediatR;
@@ -7,38 +9,41 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace FDex.Application.Features.Users.Handlers.Queries
 {
-    public class GetReferredUsersRequestHandler : IRequestHandler<GetReferredUsersRequest, Dictionary<int,List<object>>>
-	{
+    public class GetReferredUsersRequestHandler : IRequestHandler<GetReferredUsersRequest, ReferredUserQueryModel>
+    {
         private readonly IServiceProvider _serviceProvider;
 
         public GetReferredUsersRequestHandler(IServiceProvider serviceProvider)
-		{
-            _serviceProvider = serviceProvider;
-		}
-
-        public async Task<Dictionary<int, List<object>>> Handle(GetReferredUsersRequest request, CancellationToken cancellationToken)
         {
-            Dictionary<int, List<object>> response = new();
+            _serviceProvider = serviceProvider;
+        }
+
+        public async Task<ReferredUserQueryModel> Handle(GetReferredUsersRequest request, CancellationToken cancellationToken)
+        {
             await using var scope = _serviceProvider.CreateAsyncScope();
             var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-            Dictionary<int, List<User>> usersWithNumberOfPage = await _unitOfWork.UserRepository.GetReferredUsers(request.Wallet, request.Page, request.PageSize);
-            _unitOfWork.Dispose();
-            response[usersWithNumberOfPage.First().Key] = new List<object>();
-            var rawUsers = usersWithNumberOfPage.First().Value;
-            if(rawUsers != null)
+            var _mapper = scope.ServiceProvider.GetRequiredService<IMapper>();
+
+            var users = await _unitOfWork.UserRepository.GetReferredUsers(request.Wallet, request.Page, request.PageSize);
+
+            int numberOfPage = 0;
+
+            if (users.Count % request.PageSize == 0)
             {
-                foreach(var user in rawUsers)
-                {
-                    object refUser = new
-                    {
-                        Wallet = user.Wallet,
-                        ReferralPoint = user.TradePoint,
-                        ReferredDate = DateTime.Now
-                    };
-                    response.First().Value.Add(refUser);
-                }
+                numberOfPage = users.Count / request.PageSize;
             }
-            return response;
+            else
+            {
+                numberOfPage = users.Count / request.PageSize + 1;
+            }
+
+            var usersMapped = _mapper.Map<List<UserDto>>(users);
+
+            return new ReferredUserQueryModel()
+            {
+                NumberOfPage = numberOfPage,
+                Users = usersMapped
+            };
         }
     }
 }

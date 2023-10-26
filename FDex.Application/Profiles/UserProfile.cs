@@ -11,6 +11,8 @@ namespace FDex.Application.Profiles
 		{
 			CreateMap<User, UserDTOLeaderboardItemView>()
 				.ForMember(dest => dest.Wallet, opt => opt.MapFrom(src => src.Wallet));
+
+			CreateMap<User, UserDto>();
 		}
 	}
 }

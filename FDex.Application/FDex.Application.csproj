@@ -108,7 +108,6 @@
     <Folder Include="Models\Application\" />
     <Folder Include="Features\Positions\Handlers\Commands\" />
     <Folder Include="Features\Positions\Requests\Commands\" />
-    <Folder Include="DTOs\User\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FDex.Domain\FDex.Domain.csproj" />
