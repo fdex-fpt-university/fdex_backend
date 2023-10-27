@@ -8,7 +8,7 @@ namespace FDex.Application.Contracts.Persistence
 	{
         Task<object> GetDashboardItemDatas();
         Task<GetUserResponse> GetReferredUsers(string wallet, int page, int pageSize);
-        Task<UserLevelAnalytic> GetReferralAnalytics();
+        Task<object> GetReferralAnalytics();
         Task<List<User>> GetUsersInDetailsAsync();
     }
 }

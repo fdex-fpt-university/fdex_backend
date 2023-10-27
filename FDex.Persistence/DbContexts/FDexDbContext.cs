@@ -61,11 +61,6 @@ namespace FDex.Persistence.DbContexts
                     .WithMany(u => u.PositionDetails)
                     .HasForeignKey(u => u.PositionId);
             });
-
-            modelBuilder.Entity<UserLevelAnalytic>(entity =>
-            {
-                entity.HasKey(u => u.Id);
-            });
         }
 
         public DbSet<Swap> Swaps { get; set; }
@@ -74,7 +69,6 @@ namespace FDex.Persistence.DbContexts
         public DbSet<AddLiquidity> AddLiquidities { get; set; }
         public DbSet<Position> Positions { get; set; }
         public DbSet<PositionDetail> PositionDetails { get; set; }
-        public DbSet<UserLevelAnalytic> UserLevelAnalytics { get; set; }
     }
 }
 

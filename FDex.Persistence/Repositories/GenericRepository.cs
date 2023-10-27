@@ -25,6 +25,11 @@ namespace FDex.Persistence.Repositories
             return await _context.Set<T>().FindAsync(id);
         }
 
+        public async Task<T> FindAsync(Guid id)
+        {
+            return await _context.Set<T>().FindAsync(id);
+        }
+
         public async Task<IReadOnlyList<T>> GetAllAsync()
         {
             return await _context.Set<T>().ToListAsync();

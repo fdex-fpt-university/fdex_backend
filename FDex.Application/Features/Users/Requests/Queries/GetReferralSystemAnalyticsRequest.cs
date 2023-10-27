@@ -5,7 +5,7 @@ using MediatR;
 
 namespace FDex.Application.Features.Users.Requests.Queries
 {
-	public class GetReferralSystemAnalyticsRequest : IRequest<UserLevelAnalytic>
+	public class GetReferralSystemAnalyticsRequest : IRequest<object>
 	{
 	}
 }

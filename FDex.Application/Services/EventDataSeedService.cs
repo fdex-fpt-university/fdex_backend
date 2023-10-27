@@ -108,11 +108,9 @@ namespace FDex.Application.Services
                         var foundReporterPosted = await _unitOfWork.ReporterRepository.FindAsync(log.Event.Wallet);
                         if (foundReporterPosted != null)
                         {
-                            //var block = await _web3.Eth.Blocks.GetBlockWithTransactionsByHash.SendRequestAsync(log.Log.TransactionHash);
                             Reporter postingReporter = await _unitOfWork.ReporterRepository.FindAsync(log.Event.Wallet);
                             postingReporter.ReportCount += 1;
                             postingReporter.LastReportedDate = DateTime.Now;
-                            //postingReporter.LastReportedDate = DateTimeOffset.FromUnixTimeSeconds((long)block.Timestamp.ToUlong()).LocalDateTime;
                             _unitOfWork.ReporterRepository.Update(postingReporter);
                         }
                     }
@@ -306,7 +304,7 @@ namespace FDex.Application.Services
                         {
                             Id = Guid.NewGuid(),
                             PositionId = foundPosition.Id,
-                            CollateralValue = (~log.Event.CollateralChanged + 1).ToString(),
+                            CollateralValue = log.Event.CollateralValue.ToString(),
                             EntryPrice = log.Event.EntryPrice.ToString(),
                             IndexPrice = log.Event.IndexPrice.ToString(),
                             ReserveAmount = log.Event.ReserveAmount.ToString(),
@@ -332,7 +330,7 @@ namespace FDex.Application.Services
                         {
                             Id = Guid.NewGuid(),
                             PositionId = foundPosition.Id,
-                            CollateralValue = (~log.Event.CollateralValue + 1).ToString(),
+                            CollateralValue = log.Event.CollateralValue.ToString(),
                             EntryPrice = log.Event.EntryPrice.ToString(),
                             IndexPrice = log.Event.IndexPrice.ToString(),
                             ReserveAmount = log.Event.ReserveAmount.ToString(),
@@ -358,7 +356,7 @@ namespace FDex.Application.Services
                         {
                             Id = Guid.NewGuid(),
                             PositionId = foundPosition.Id,
-                            CollateralValue = (~log.Event.CollateralValue + 1).ToString(),
+                            CollateralValue = log.Event.CollateralValue.ToString(),
                             EntryPrice = null,
                             IndexPrice = log.Event.IndexPrice.ToString(),
                             ReserveAmount = log.Event.ReserveAmount.ToString(),

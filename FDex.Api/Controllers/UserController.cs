@@ -45,10 +45,10 @@ namespace FDex.Api.Controllers
         }
 
         [HttpGet("[action]")]
-        public async Task<UserLevelAnalytic> GetReferralSystemAnalytics()
+        public async Task<object> GetReferralSystemAnalytics()
         {
-            UserLevelAnalytic info = await _mediator.Send(new GetReferralSystemAnalyticsRequest());
-            return info;
+            object obj = await _mediator.Send(new GetReferralSystemAnalyticsRequest());
+            return obj;
         }
 
         [HttpGet("[action]")]

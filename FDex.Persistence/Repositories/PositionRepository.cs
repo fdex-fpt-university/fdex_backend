@@ -25,12 +25,15 @@ namespace FDex.Persistence.Repositories
                 .ToListAsync();
             foreach (var pos in positions)
             {
-                var latestPositionDetail = pos.PositionDetails
+                var positionDetails = pos.PositionDetails
                     .OrderByDescending(pd => pd.Time)
-                    .FirstOrDefault();
-                if (latestPositionDetail.PositionState == PositionState.Liquidate || latestPositionDetail.PositionState == PositionState.Close)
+                    .ToList();
+                foreach(var posd in positionDetails)
                 {
-                    response.Add(pos);
+                    if(posd.PositionState == PositionState.Close || posd.PositionState == PositionState.Liquidate || posd.PositionState == PositionState.Decrease)
+                    {
+                        response.Add(pos);
+                    }
                 }
             }
             return response;

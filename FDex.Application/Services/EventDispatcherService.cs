@@ -269,7 +269,6 @@ namespace FDex.Application.Services
                             Time = DateTime.Now
                         };
                         await _unitOfWork.PositionDetailRepository.AddAsync(posd);
-
                         await _unitOfWork.SaveAsync();
                         _unitOfWork.Dispose();
                     });
@@ -286,7 +285,7 @@ namespace FDex.Application.Services
                         {
                             Id = Guid.NewGuid(),
                             PositionId = foundPosition.Id,
-                            CollateralValue = (~decodedDecreasePosition.Event.CollateralChanged + 1).ToString(),
+                            CollateralValue = decodedDecreasePosition.Event.CollateralValue.ToString(),
                             EntryPrice = decodedDecreasePosition.Event.EntryPrice.ToString(),
                             IndexPrice = decodedDecreasePosition.Event.IndexPrice.ToString(),
                             ReserveAmount = decodedDecreasePosition.Event.ReserveAmount.ToString(),
@@ -314,7 +313,7 @@ namespace FDex.Application.Services
                         {
                             Id = Guid.NewGuid(),
                             PositionId = foundPosition.Id,
-                            CollateralValue = (~decodedClosePosition.Event.CollateralValue + 1).ToString(),
+                            CollateralValue = decodedClosePosition.Event.CollateralValue.ToString(),
                             EntryPrice = decodedClosePosition.Event.EntryPrice.ToString(),
                             IndexPrice = decodedClosePosition.Event.IndexPrice.ToString(),
                             ReserveAmount = decodedClosePosition.Event.ReserveAmount.ToString(),
@@ -341,7 +340,7 @@ namespace FDex.Application.Services
                         {
                             Id = Guid.NewGuid(),
                             PositionId = foundPosition.Id,
-                            CollateralValue = (~decodedLiquidatePosition.Event.CollateralValue + 1).ToString(),
+                            CollateralValue = decodedLiquidatePosition.Event.CollateralValue.ToString(),
                             EntryPrice = null,
                             IndexPrice = decodedLiquidatePosition.Event.IndexPrice.ToString(),
                             ReserveAmount = decodedLiquidatePosition.Event.ReserveAmount.ToString(),

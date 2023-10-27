@@ -57,7 +57,7 @@ namespace FDex.Persistence.Repositories
             return dashboardItemDatas;
         }
 
-        public async Task<UserLevelAnalytic> GetReferralAnalytics()
+        public async Task<object> GetReferralAnalytics()
         {
             var levelCounts = new Dictionary<int, int>();
             levelCounts = await _context.Users
@@ -72,7 +72,7 @@ namespace FDex.Persistence.Repositories
                     el => el.Level,
                     el => el.Count
                 );
-            UserLevelAnalytic analytic = new()
+            object analytic = new
             {
                 Level0 = levelCounts.GetValueOrDefault(0),
                 Level1 = levelCounts.GetValueOrDefault(1),
