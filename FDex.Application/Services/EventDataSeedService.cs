@@ -31,6 +31,7 @@ namespace FDex.Application.Services
         private const string REPORTER_CONTRACT = "Reporter";
 
         bool isFirstParam = true;
+        private BigInteger _latestBlockNumber = 0;
         private BigInteger _currentReporterBlockNumber = 34002213;
         private BigInteger _currentCommonBlockNumber = 34403044;
         private BigInteger _limitBlockNumber = 9999;
@@ -47,8 +48,7 @@ namespace FDex.Application.Services
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             await using var scope = _serviceProvider.CreateAsyncScope();
-            var latestBlockNumber = await _web3.Eth.Blocks.GetBlockNumber.SendRequestAsync();
-            Console.WriteLine("[DEV-INF] Latest block number:" + latestBlockNumber.ToString());
+            _latestBlockNumber = await _web3.Eth.Blocks.GetBlockNumber.SendRequestAsync();
             var poolAddress = "0x713B1c99A5871b6Ea58C890305DD7066FC01988b";
             var oracleAddress = "0x1E16D408a6ae4E2a867cd33F15cb7E17441139c1";
             var increasePositionEventHandler = _web3.Eth.GetEvent<FDexIncreaPositionDTO>(poolAddress);
@@ -61,7 +61,7 @@ namespace FDex.Application.Services
             var reporterAddedEventHandler = _web3.Eth.GetEvent<ReporterAddedDTO>(oracleAddress);
             var reporterRemovedEventHandler = _web3.Eth.GetEvent<ReporterRemovedDTO>(oracleAddress);
             var reporterPostedEventHandler = _web3.Eth.GetEvent<ReporterPostedDTO>(oracleAddress);
-            while (_currentReporterBlockNumber <= latestBlockNumber || _currentCommonBlockNumber <= latestBlockNumber)
+            while (_currentReporterBlockNumber <= _latestBlockNumber || _currentCommonBlockNumber <= _latestBlockNumber)
             {
                 BlockParameter startCommonBlock = HandleBlockParameter(COMMON_CONTRACT);
                 BlockParameter endCommonBlock = HandleBlockParameter(COMMON_CONTRACT);
@@ -79,7 +79,7 @@ namespace FDex.Application.Services
                 var filterAllClosePosition = closePositionEventHandler.CreateFilterInput(startCommonBlock, endCommonBlock);
                 var filterAllLiquidatePosition = liquidatePositionEventHandler.CreateFilterInput(startCommonBlock, endCommonBlock);
 
-                if (_currentReporterBlockNumber <= latestBlockNumber)
+                if (_currentReporterBlockNumber <= _latestBlockNumber)
                 {
                     var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                     var reporterAddedEvents = await reporterAddedEventHandler.GetAllChangesAsync(filterAllReporterAdded);
@@ -118,7 +118,7 @@ namespace FDex.Application.Services
                     _unitOfWork.Dispose();
                 }
 
-                if (_currentCommonBlockNumber <= latestBlockNumber)
+                if (_currentCommonBlockNumber <= _latestBlockNumber)
                 {
                     var swapEvents = await swapEventHandler.GetAllChangesAsync(filterAllSwapEvents);
                     var addLiquidityEvents = await addLiquidityEventHandler.GetAllChangesAsync(filterAllAddLiquidity);
@@ -210,7 +210,7 @@ namespace FDex.Application.Services
                                 };
                                 await _unitOfWork.UserRepository.AddAsync(user);
                             }
-                            string key = BitConverter.ToString(log.Event.Key).Replace("-", "");
+                            string key = "0x" + BitConverter.ToString(log.Event.Key).Replace("-", "");
                             Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
                             if (foundPosition == null)
                             {
@@ -223,7 +223,9 @@ namespace FDex.Application.Services
                                     IndexToken = log.Event.IndexToken,
                                     Size = log.Event.Size.ToString(),
                                     Side = log.Event.Side == '1',
-                                    Leverage = (int)(log.Event.Size / log.Event.CollateralValue)
+                                    Leverage = (int)(log.Event.Size / log.Event.CollateralValue),
+                                    TradingVolumn = log.Event.SizeChanged.ToString(),
+                                    LastUpdatedDate = DateTime.Now
                                 };
                                 await _unitOfWork.PositionRepository.AddAsync(pos);
                                 PositionDetail posd = new()
@@ -257,7 +259,10 @@ namespace FDex.Application.Services
                                     Time = DateTime.Now
                                 };
                                 await _unitOfWork.PositionDetailRepository.AddAsync(posd);
+                                foundPosition.TradingVolumn = (BigInteger.Parse(foundPosition.TradingVolumn) + log.Event.Size).ToString();
+                                _unitOfWork.PositionRepository.Update(foundPosition);
                             }
+
                             await _unitOfWork.SaveAsync();
                             _unitOfWork.Dispose();
                         }
@@ -271,7 +276,7 @@ namespace FDex.Application.Services
                     {
                         Console.WriteLine("[DEV-INF] Decoding an increase position event ...");
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-                        string key = BitConverter.ToString(log.Event.Key).Replace("-", "");
+                        string key = "0x" + BitConverter.ToString(log.Event.Key).Replace("-", "");
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
                         foundPosition.Size = log.Event.Size.ToString();
                         PositionDetail posd = new()
@@ -287,6 +292,9 @@ namespace FDex.Application.Services
                             FeeValue = log.Event.FeeValue.ToString(),
                             Time = DateTime.Now
                         };
+                        foundPosition.LastUpdatedDate = DateTime.Now;
+                        foundPosition.Size = log.Event.Size.ToString();
+                        foundPosition.TradingVolumn = (BigInteger.Parse(foundPosition.TradingVolumn) + log.Event.SizeChanged).ToString();
                         _unitOfWork.PositionRepository.Update(foundPosition);
                         await _unitOfWork.PositionDetailRepository.AddAsync(posd);
                         await _unitOfWork.SaveAsync();
@@ -297,7 +305,7 @@ namespace FDex.Application.Services
                     {
                         Console.WriteLine("[DEV-INF] Decoding a decrease position event ...");
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-                        string key = BitConverter.ToString(log.Event.Key).Replace("-", "");
+                        string key = "0x" + BitConverter.ToString(log.Event.Key).Replace("-", "");
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
                         foundPosition.Size = log.Event.Size.ToString();
                         PositionDetail posd = new()
@@ -313,6 +321,8 @@ namespace FDex.Application.Services
                             FeeValue = log.Event.FeeValue.ToString(),
                             Time = DateTime.Now
                         };
+                        foundPosition.LastUpdatedDate = DateTime.Now;
+                        foundPosition.Size = log.Event.Size.ToString();
                         _unitOfWork.PositionRepository.Update(foundPosition);
                         await _unitOfWork.PositionDetailRepository.AddAsync(posd);
                         await _unitOfWork.SaveAsync();
@@ -323,9 +333,8 @@ namespace FDex.Application.Services
                     {
                         Console.WriteLine("[DEV-INF] Decoding a close position event ...");
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-                        string key = BitConverter.ToString(log.Event.Key).Replace("-", "");
+                        string key = "0x" + BitConverter.ToString(log.Event.Key).Replace("-", "");
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
-                        foundPosition.Size = log.Event.Size.ToString();
                         PositionDetail posd = new()
                         {
                             Id = Guid.NewGuid(),
@@ -339,6 +348,8 @@ namespace FDex.Application.Services
                             Pnl = log.Event.Pnl.Sig == 1 ? log.Event.Pnl.Abs.ToString() : (~log.Event.Pnl.Abs + 1).ToString(),
                             Time = DateTime.Now
                         };
+                        foundPosition.LastUpdatedDate = DateTime.Now;
+                        foundPosition.Size = "0";
                         _unitOfWork.PositionRepository.Update(foundPosition);
                         await _unitOfWork.PositionDetailRepository.AddAsync(posd);
                         await _unitOfWork.SaveAsync();
@@ -349,7 +360,7 @@ namespace FDex.Application.Services
                     {
                         Console.WriteLine("[DEV-INF] Decoding a liquidate position event ...");
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-                        string key = BitConverter.ToString(log.Event.Key).Replace("-", "");
+                        string key = "0x" + BitConverter.ToString(log.Event.Key).Replace("-", "");
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
                         foundPosition.Size = log.Event.Size.ToString();
                         PositionDetail posd = new()
@@ -365,6 +376,8 @@ namespace FDex.Application.Services
                             Pnl = log.Event.Pnl.Sig == 1 ? log.Event.Pnl.Abs.ToString() : (~log.Event.Pnl.Abs + 1).ToString(),
                             Time = DateTime.Now
                         };
+                        foundPosition.LastUpdatedDate = DateTime.Now;
+                        foundPosition.Size = "0";
                         _unitOfWork.PositionRepository.Update(foundPosition);
                         await _unitOfWork.PositionDetailRepository.AddAsync(posd);
                         await _unitOfWork.SaveAsync();
@@ -394,13 +407,27 @@ namespace FDex.Application.Services
             }
             if (contract.Equals(COMMON_CONTRACT))
             {
-                _currentCommonBlockNumber += _limitBlockNumber;
+                if (_latestBlockNumber - _currentCommonBlockNumber < _limitBlockNumber)
+                {
+                    _currentCommonBlockNumber += _latestBlockNumber - _currentCommonBlockNumber;
+                }
+                else
+                {
+                    _currentCommonBlockNumber += _limitBlockNumber;
+                }
                 isFirstParam = !isFirstParam;
                 return new BlockParameter(new HexBigInteger(_currentCommonBlockNumber));
             }
             else
             {
-                _currentReporterBlockNumber += _limitBlockNumber;
+                if (_latestBlockNumber - _currentReporterBlockNumber < _limitBlockNumber)
+                {
+                    _currentReporterBlockNumber += _latestBlockNumber - _currentReporterBlockNumber;
+                }
+                else
+                {
+                    _currentReporterBlockNumber += _limitBlockNumber;
+                }
                 isFirstParam = !isFirstParam;
                 return new BlockParameter(new HexBigInteger(_currentReporterBlockNumber));
             }

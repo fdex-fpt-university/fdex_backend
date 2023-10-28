@@ -12,6 +12,8 @@ namespace FDex.Application.Features.Users.Requests.Queries
         public bool? IsWinAsc { get; set; }
         public bool? IsLossAsc { get; set; }
 		public bool? IsPNLwFeesAsc { get; set; }
+        [Required]
+        public int TimeRange { get; set; }
     }
 }
 

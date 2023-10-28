@@ -2,6 +2,7 @@
 using System.Numerics;
 using FDex.Application.Common.Models;
 using FDex.Application.Contracts.Persistence;
+using FDex.Application.DTOs.User;
 using FDex.Domain.Entities;
 using FDex.Persistence.DbContexts;
 using Microsoft.EntityFrameworkCore;
@@ -29,6 +30,15 @@ namespace FDex.Persistence.Repositories
             BigInteger totalUserCountChange = await totalUser.Where(u => u.CreatedDate.Date > DateTime.Now.AddDays(-1).Date).CountAsync();
             List<Swap> swaps = _context.Swaps.ToList();
             List<AddLiquidity> addLiquidities = _context.AddLiquidities.ToList();
+            List<Position> positions = _context.Positions.ToList();
+            foreach( var pos in positions)
+            {
+                totalTradingVolumn += BigInteger.Parse(pos.TradingVolumn);
+                if(pos.LastUpdatedDate.Date > DateTime.Now.AddDays(-1).Date)
+                {
+                    totalTradingVolumnChange += BigInteger.Parse(pos.TradingVolumn);
+                }
+            }
             foreach (var swap in swaps)
             {
                 accuredFees += BigInteger.Parse(swap.Fee);
@@ -55,6 +65,27 @@ namespace FDex.Persistence.Repositories
                 TotalTradingVolumnChange = totalTradingVolumnChange.ToString()
             };
             return dashboardItemDatas;
+        }
+
+        public async Task<List<UserDTOLeaderboardItemView>> GetLeaderboardItemsAsync(bool? isTradingVolumnAsc, bool? isAvgLeverageAsc, bool? isWinAsc, bool? isLossAsc, bool? isPNLwFeesAsc, int timeRange)
+        {
+            List<UserDTOLeaderboardItemView> response = new();
+            var cutoffDate = DateTime.Now;
+            switch (timeRange)
+            {
+                case 0:
+                    cutoffDate = cutoffDate.AddHours(-24);
+                    break;
+                case 1:
+                    cutoffDate = cutoffDate.AddDays(-7);
+                    break;
+                case 2:
+                    cutoffDate = cutoffDate.AddMonths(-1);
+                    break;
+                default:
+                    break;
+            }
+            return response;
         }
 
         public async Task<object> GetReferralAnalytics()

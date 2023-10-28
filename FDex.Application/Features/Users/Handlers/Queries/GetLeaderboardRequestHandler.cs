@@ -21,15 +21,9 @@ namespace FDex.Application.Features.Users.Handlers.Queries
             await using var scope = _serviceProvider.CreateAsyncScope();
             var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             var _mapper = scope.ServiceProvider.GetRequiredService<IMapper>();
-            List<UserDTOLeaderboardItemView> response = new();
-            var users = await _unitOfWork.UserRepository.GetUsersInDetailsAsync();
+            var items = await _unitOfWork.UserRepository.GetLeaderboardItemsAsync(request.IsTradingVolumnAsc, request.IsAvgLeverageAsc, request.IsWinAsc, request.IsLossAsc, request.IsPNLwFeesAsc,request.TimeRange);
             _unitOfWork.Dispose();
-            foreach(var user in users)
-            {
-                var mappedUser = _mapper.Map<UserDTOLeaderboardItemView>(user);
-                response.Add(mappedUser);
-            }
-            return response;
+            return items;
         }
     }
 }
