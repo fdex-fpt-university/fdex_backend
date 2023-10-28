@@ -4,6 +4,7 @@ using FDex.Application.Common.Models;
 using FDex.Application.Contracts.Persistence;
 using FDex.Application.DTOs.User;
 using FDex.Domain.Entities;
+using FDex.Domain.Enumerations;
 using FDex.Persistence.DbContexts;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin.Secp256k1;
@@ -85,9 +86,46 @@ namespace FDex.Persistence.Repositories
                 default:
                     break;
             }
+            var users = _context.Users
+                .Where(user => _context.Positions
+                    .Where(position => _context.PositionDetails
+                        .Where(positionDetail => positionDetail.Time >= cutoffDate && positionDetail.PositionId == position.Id)
+                        .Any())
+                    .Any(position => position.Wallet == user.Wallet))
+                .GroupBy(user => user.Wallet)
+                .Select(userGroup => new UserDTOLeaderboardItemView
+                {
+                    Wallet = userGroup.Key,
+                    TradingVol = userGroup.Sum(user => user.Positions
+                        .SelectMany(position => position.PositionDetails)
+                        .Where(positionDetail => positionDetail.Time >= cutoffDate)
+                        .Sum(positionDetail => (int)BigInteger.Parse(positionDetail.SizeChanged))
+                    ),
+                    AvgLeverage = userGroup.Average(user => user.Positions
+                        .Where(position => position.PositionDetails
+                            .Any(positionDetail => positionDetail.Time >= cutoffDate)
+                        )
+                        .Average(position => position.Leverage)
+                    ),
+                    Win = userGroup.Sum(user => user.Positions
+                        .SelectMany(position => position.PositionDetails)
+                        .Where(positionDetail => positionDetail.Time >= cutoffDate && BigInteger.Parse(positionDetail.Pnl) > 0)
+                        .Count()
+                    ),
+                    Loss = userGroup.Sum(user => user.Positions
+                        .SelectMany(position => position.PositionDetails)
+                        .Where(positionDetail => positionDetail.Time >= cutoffDate && BigInteger.Parse(positionDetail.Pnl) < 0)
+                        .Count()
+                    ),
+                    PNLwFees = userGroup.Sum(user => user.Positions
+                        .SelectMany(position => position.PositionDetails)
+                        .Where(positionDetail => positionDetail.Time >= cutoffDate)
+                        .Sum(positionDetail => (int)BigInteger.Parse(positionDetail.FeeValue))
+                    )
+                });
+
             return response;
         }
-
         public async Task<object> GetReferralAnalytics()
         {
             var levelCounts = new Dictionary<int, int>();
