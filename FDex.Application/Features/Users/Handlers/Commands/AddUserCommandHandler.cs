@@ -1,36 +1,38 @@
 ﻿using System;
-using AutoMapper;
 using FDex.Application.Contracts.Persistence;
 using FDex.Application.Features.Users.Requests.Commands;
+using FDex.Domain.Entities;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FDex.Application.Features.Users.Handlers.Commands
 {
-    public class UpdateReferredUserCommandHandler : IRequestHandler<UpdateReferredUserCommand, bool>
+    public class AddUserCommandHandler : IRequestHandler<AddUserCommand, bool>
     {
         private readonly IServiceProvider _serviceProvider;
 
-        public UpdateReferredUserCommandHandler(IServiceProvider serviceProvider)
-        {
+        public AddUserCommandHandler(IServiceProvider serviceProvider)
+		{
             _serviceProvider = serviceProvider;
         }
 
-        public async Task<bool> Handle(UpdateReferredUserCommand request, CancellationToken cancellationToken)
+        public async Task<bool> Handle(AddUserCommand request, CancellationToken cancellationToken)
         {
             await using var scope = _serviceProvider.CreateAsyncScope();
             var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-            var referringUser = await _unitOfWork.UserRepository.FindAsync(request.ReferringUser);
-            var referralUser = await _unitOfWork.UserRepository.FindAsync(request.ReferralUser);
-            if (referralUser == null || referringUser == null)
+            var user = await _unitOfWork.UserRepository.FindAsync(request.Wallet);
+            if (user != null)
             {
                 return false;
             }
-            referringUser.ReferredUserOf = request.ReferralUser;
-            _unitOfWork.UserRepository.Update(referringUser);
+            var newUser = new User()
+            {
+                Wallet = request.Wallet,
+                CreatedDate = DateTime.Now
+            };
+            await _unitOfWork.UserRepository.AddAsync(newUser);
             await _unitOfWork.SaveAsync();
             _unitOfWork.Dispose();
-
             return true;
         }
     }

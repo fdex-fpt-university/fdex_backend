@@ -10,7 +10,7 @@ namespace FDex.Application.DTOs.TradingPosition
         public string Size { get; set; }
         public string EntryPrice { get; set; }
         public bool Side { get; set; }
-        public SignedInt Pnl { get; set; }
+        public string Pnl { get; set; }
     }
 }
 

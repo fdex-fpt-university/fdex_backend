@@ -7,8 +7,8 @@ namespace FDex.Domain.Entities
         public string Wallet { get; set; }
         public string? ReferredUserOf { get; set; }
         public DateTime? ReferredUserDate { get; set; }
-        public int? TradePoint { get; set; }
-        public int? ReferralPoint { get; set; }
+        public decimal? TradePoint { get; set; }
+        public decimal? ReferralPoint { get; set; }
         public int? Level { get; set; }
         public DateTime CreatedDate { get; set; }
 

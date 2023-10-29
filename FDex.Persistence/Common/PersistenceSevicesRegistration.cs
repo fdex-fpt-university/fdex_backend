@@ -26,6 +26,7 @@ namespace FDex.Persistence.Common
                     options.UseTriggers(triggerOptions =>
                     {
                         triggerOptions.AddTrigger<UserLevelTrigger>();
+                        triggerOptions.AddTrigger<UserPointTrigger>();
                     });
                 });
             },

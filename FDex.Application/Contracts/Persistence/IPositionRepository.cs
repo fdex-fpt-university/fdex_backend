@@ -1,4 +1,5 @@
 ﻿using System;
+using FDex.Application.DTOs.TradingPosition;
 using FDex.Domain.Entities;
 
 namespace FDex.Application.Contracts.Persistence
@@ -9,7 +10,7 @@ namespace FDex.Application.Contracts.Persistence
 
         Task<List<Position>> GetPositionOrdersInDetails(string wallet);
 
-        Task<List<Position>> GetPositionHistoriesInDetails(string wallet);
+        Task<List<PositionDTOViewHistory>> GetPositionHistoriesInDetails(string wallet);
 
         Task<List<Position>> GetPositionsInDetails(string wallet);
     }

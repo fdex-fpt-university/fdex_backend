@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Numerics;
+using FDex.Application.Common.Models;
 using FDex.Application.Contracts.Persistence;
+using FDex.Application.DTOs.User;
 using FDex.Domain.Entities;
+using FDex.Domain.Enumerations;
 using FDex.Persistence.DbContexts;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin.Secp256k1;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace FDex.Persistence.Repositories
 {
@@ -28,6 +32,15 @@ namespace FDex.Persistence.Repositories
             BigInteger totalUserCountChange = await totalUser.Where(u => u.CreatedDate.Date > DateTime.Now.AddDays(-1).Date).CountAsync();
             List<Swap> swaps = _context.Swaps.ToList();
             List<AddLiquidity> addLiquidities = _context.AddLiquidities.ToList();
+            List<Position> positions = _context.Positions.ToList();
+            foreach( var pos in positions)
+            {
+                totalTradingVolumn += BigInteger.Parse(pos.TradingVolumn);
+                if(pos.LastUpdatedDate.Date > DateTime.Now.AddDays(-1).Date)
+                {
+                    totalTradingVolumnChange += BigInteger.Parse(pos.TradingVolumn);
+                }
+            }
             foreach (var swap in swaps)
             {
                 accuredFees += BigInteger.Parse(swap.Fee);
@@ -56,6 +69,75 @@ namespace FDex.Persistence.Repositories
             return dashboardItemDatas;
         }
 
+        public async Task<List<UserDTOLeaderboardItemView>> GetLeaderboardItemsAsync(bool? isTradingVolumeAsc, bool? isAvgLeverageAsc, bool? isWinAsc, bool? isLossAsc, bool? isPNLwFeesAsc, int timeRange)
+        {
+            List<UserDTOLeaderboardItemView> response = new();
+            var cutoffDate = DateTime.Now;
+            switch (timeRange)
+            {
+                case 0:
+                    cutoffDate = cutoffDate.AddHours(-24);
+                    break;
+                case 1:
+                    cutoffDate = cutoffDate.AddDays(-7);
+                    break;
+                case 2:
+                    cutoffDate = cutoffDate.AddMonths(-1);
+                    break;
+                default:
+                    break;
+            }
+            var users = await _context.Users.Include(u => u.Positions).ThenInclude(p => p.PositionDetails).ToListAsync();
+            foreach (var user in users)
+            {
+                var responseItem = new UserDTOLeaderboardItemView()
+                {
+                    Wallet = user.Wallet,
+                    TradingVol = BigInteger.Zero.ToString(),
+                    AvgLeverage = double.NegativeZero,
+                    Win = 0,
+                    Loss = 0,
+                    PNLwFees = BigInteger.Zero.ToString()
+                };
+                var positions = user.Positions;
+                if (positions != null)
+                {
+                    foreach(var position in positions)
+                    {
+                        if (position.LastUpdatedDate > cutoffDate)
+                        {
+                            responseItem.TradingVol = (BigInteger.Parse(responseItem.TradingVol) + BigInteger.Parse(position.TradingVolumn)).ToString();
+                            responseItem.AvgLeverage += position.Leverage;
+                            var positionDetails = position.PositionDetails;
+                            foreach (var positionDetail in positionDetails)
+                            {
+                                var pnl = positionDetail.Pnl;
+                                if (pnl != null)
+                                {
+                                    responseItem.PNLwFees = (BigInteger.Parse(responseItem.PNLwFees) + BigInteger.Parse(pnl)).ToString();
+                                    if (BigInteger.Parse(pnl) >= 0)
+                                    {
+                                        responseItem.Win += 1;
+                                    }
+                                    else
+                                    {
+                                        responseItem.Loss += 1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    responseItem.AvgLeverage /= positions.Count();
+                }
+                response.Add(responseItem);
+            }
+            response = isTradingVolumeAsc.HasValue ? (isTradingVolumeAsc.Value ? response.OrderBy(item => item.TradingVol).ToList() : response.OrderByDescending(item => item.TradingVol).ToList()) : response;
+            response = isAvgLeverageAsc.HasValue ? (isAvgLeverageAsc.Value ? response.OrderBy(item => item.AvgLeverage).ToList() : response.OrderByDescending(item => item.AvgLeverage).ToList()) : response;
+            response = isWinAsc.HasValue ? (isWinAsc.Value ? response.OrderBy(item => item.Win).ToList() : response.OrderByDescending(item => item.Win).ToList()) : response;
+            response = isLossAsc.HasValue ? (isLossAsc.Value ? response.OrderBy(item => item.Loss).ToList() : response.OrderByDescending(item => item.Loss).ToList()) : response;
+            response = isPNLwFeesAsc.HasValue ? (isPNLwFeesAsc.Value ? response.OrderBy(item => item.PNLwFees).ToList() : response.OrderByDescending(item => item.PNLwFees).ToList()) : response;
+            return response;
+        }
         public async Task<object> GetReferralAnalytics()
         {
             var levelCounts = new Dictionary<int, int>();
@@ -81,7 +163,7 @@ namespace FDex.Persistence.Repositories
             return analytic;
         }
 
-        public async Task<List<User>> GetReferredUsers(string wallet, int page, int pageSize)
+        public async Task<GetUserResponse> GetReferredUsers(string wallet, int page, int pageSize)
         {
             List<User> referredUsers = await _context.Users
                 .Where(u => u.Wallet == wallet)
@@ -90,7 +172,26 @@ namespace FDex.Persistence.Repositories
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
-            return referredUsers;
+            int referredUsersCount = await _context.Users.Where(u => u.Wallet == wallet).SelectMany(u => u.ReferredUsers).CountAsync();
+
+            int numberOfPage = referredUsersCount % pageSize == 0 ? numberOfPage = referredUsersCount / pageSize : numberOfPage = referredUsersCount / pageSize + 1;
+
+            var rs = new GetUserResponse()
+            {
+                Users = referredUsers,
+                NumberOfPage = numberOfPage
+            };
+
+            return rs;
+        }
+
+        public async Task<List<User>> GetUsersInDetailsAsync()
+        {
+            List<User> users = await _context.Users
+                .Include(u => u.Positions)
+                .ThenInclude(p => p.PositionDetails)
+                .ToListAsync();
+            return users;
         }
     }
 }
