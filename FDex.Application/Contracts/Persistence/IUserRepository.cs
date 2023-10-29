@@ -11,7 +11,7 @@ namespace FDex.Application.Contracts.Persistence
         Task<GetUserResponse> GetReferredUsers(string wallet, int page, int pageSize);
         Task<object> GetReferralAnalytics();
         Task<List<User>> GetUsersInDetailsAsync();
-        Task<List<UserDTOLeaderboardItemView>> GetLeaderboardItemsAsync(bool? isTradingVolumnAsc, bool? isAvgLeverageAsc, bool? isWinAsc, bool? isLossAsc, bool? isPNLwFeesAsc, int timeRange);
+        Task<List<UserDTOLeaderboardItemView>> GetLeaderboardItemsAsync(bool? isTradingVolumeAsc, bool? isAvgLeverageAsc, bool? isWinAsc, bool? isLossAsc, bool? isPNLwFeesAsc, int timeRange);
     }
 }
 

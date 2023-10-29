@@ -8,6 +8,7 @@ using FDex.Domain.Enumerations;
 using FDex.Persistence.DbContexts;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin.Secp256k1;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace FDex.Persistence.Repositories
 {
@@ -68,7 +69,7 @@ namespace FDex.Persistence.Repositories
             return dashboardItemDatas;
         }
 
-        public async Task<List<UserDTOLeaderboardItemView>> GetLeaderboardItemsAsync(bool? isTradingVolumnAsc, bool? isAvgLeverageAsc, bool? isWinAsc, bool? isLossAsc, bool? isPNLwFeesAsc, int timeRange)
+        public async Task<List<UserDTOLeaderboardItemView>> GetLeaderboardItemsAsync(bool? isTradingVolumeAsc, bool? isAvgLeverageAsc, bool? isWinAsc, bool? isLossAsc, bool? isPNLwFeesAsc, int timeRange)
         {
             List<UserDTOLeaderboardItemView> response = new();
             var cutoffDate = DateTime.Now;
@@ -86,44 +87,55 @@ namespace FDex.Persistence.Repositories
                 default:
                     break;
             }
-            var users = _context.Users
-                .Where(user => _context.Positions
-                    .Where(position => _context.PositionDetails
-                        .Where(positionDetail => positionDetail.Time >= cutoffDate && positionDetail.PositionId == position.Id)
-                        .Any())
-                    .Any(position => position.Wallet == user.Wallet))
-                .GroupBy(user => user.Wallet)
-                .Select(userGroup => new UserDTOLeaderboardItemView
+            var users = await _context.Users.Include(u => u.Positions).ThenInclude(p => p.PositionDetails).ToListAsync();
+            foreach (var user in users)
+            {
+                var responseItem = new UserDTOLeaderboardItemView()
                 {
-                    Wallet = userGroup.Key,
-                    TradingVol = userGroup.Sum(user => user.Positions
-                        .SelectMany(position => position.PositionDetails)
-                        .Where(positionDetail => positionDetail.Time >= cutoffDate)
-                        .Sum(positionDetail => (int)BigInteger.Parse(positionDetail.SizeChanged))
-                    ),
-                    AvgLeverage = userGroup.Average(user => user.Positions
-                        .Where(position => position.PositionDetails
-                            .Any(positionDetail => positionDetail.Time >= cutoffDate)
-                        )
-                        .Average(position => position.Leverage)
-                    ),
-                    Win = userGroup.Sum(user => user.Positions
-                        .SelectMany(position => position.PositionDetails)
-                        .Where(positionDetail => positionDetail.Time >= cutoffDate && BigInteger.Parse(positionDetail.Pnl) > 0)
-                        .Count()
-                    ),
-                    Loss = userGroup.Sum(user => user.Positions
-                        .SelectMany(position => position.PositionDetails)
-                        .Where(positionDetail => positionDetail.Time >= cutoffDate && BigInteger.Parse(positionDetail.Pnl) < 0)
-                        .Count()
-                    ),
-                    PNLwFees = userGroup.Sum(user => user.Positions
-                        .SelectMany(position => position.PositionDetails)
-                        .Where(positionDetail => positionDetail.Time >= cutoffDate)
-                        .Sum(positionDetail => (int)BigInteger.Parse(positionDetail.FeeValue))
-                    )
-                });
-
+                    Wallet = user.Wallet,
+                    TradingVol = BigInteger.Zero.ToString(),
+                    AvgLeverage = double.NegativeZero,
+                    Win = 0,
+                    Loss = 0,
+                    PNLwFees = BigInteger.Zero.ToString()
+                };
+                var positions = user.Positions;
+                if (positions != null)
+                {
+                    foreach(var position in positions)
+                    {
+                        if (position.LastUpdatedDate > cutoffDate)
+                        {
+                            responseItem.TradingVol = (BigInteger.Parse(responseItem.TradingVol) + BigInteger.Parse(position.TradingVolumn)).ToString();
+                            responseItem.AvgLeverage += position.Leverage;
+                            var positionDetails = position.PositionDetails;
+                            foreach (var positionDetail in positionDetails)
+                            {
+                                var pnl = positionDetail.Pnl;
+                                if (pnl != null)
+                                {
+                                    responseItem.PNLwFees = (BigInteger.Parse(responseItem.PNLwFees) + BigInteger.Parse(pnl)).ToString();
+                                    if (BigInteger.Parse(pnl) >= 0)
+                                    {
+                                        responseItem.Win += 1;
+                                    }
+                                    else
+                                    {
+                                        responseItem.Loss += 1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    responseItem.AvgLeverage /= positions.Count();
+                }
+                response.Add(responseItem);
+            }
+            response = isTradingVolumeAsc.HasValue ? (isTradingVolumeAsc.Value ? response.OrderBy(item => item.TradingVol).ToList() : response.OrderByDescending(item => item.TradingVol).ToList()) : response;
+            response = isAvgLeverageAsc.HasValue ? (isAvgLeverageAsc.Value ? response.OrderBy(item => item.AvgLeverage).ToList() : response.OrderByDescending(item => item.AvgLeverage).ToList()) : response;
+            response = isWinAsc.HasValue ? (isWinAsc.Value ? response.OrderBy(item => item.Win).ToList() : response.OrderByDescending(item => item.Win).ToList()) : response;
+            response = isLossAsc.HasValue ? (isLossAsc.Value ? response.OrderBy(item => item.Loss).ToList() : response.OrderByDescending(item => item.Loss).ToList()) : response;
+            response = isPNLwFeesAsc.HasValue ? (isPNLwFeesAsc.Value ? response.OrderBy(item => item.PNLwFees).ToList() : response.OrderByDescending(item => item.PNLwFees).ToList()) : response;
             return response;
         }
         public async Task<object> GetReferralAnalytics()

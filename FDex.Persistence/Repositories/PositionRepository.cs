@@ -1,6 +1,7 @@
 ﻿using System;
 using Azure;
 using FDex.Application.Contracts.Persistence;
+using FDex.Application.DTOs.TradingPosition;
 using FDex.Domain.Entities;
 using FDex.Domain.Enumerations;
 using FDex.Persistence.DbContexts;
@@ -16,9 +17,9 @@ namespace FDex.Persistence.Repositories
             _context = context;
         }
 
-        public async Task<List<Position>> GetPositionHistoriesInDetails(string wallet)
+        public async Task<List<PositionDTOViewHistory>> GetPositionHistoriesInDetails(string wallet)
         {
-            List<Position> response = new();
+            List<PositionDTOViewHistory> response = new();
             var positions = await _context.Positions
                 .Where(x => x.Wallet == wallet)
                 .Include(c => c.PositionDetails)
@@ -30,9 +31,17 @@ namespace FDex.Persistence.Repositories
                     .ToList();
                 foreach(var posd in positionDetails)
                 {
-                    if(posd.PositionState == PositionState.Close || posd.PositionState == PositionState.Liquidate || posd.PositionState == PositionState.Decrease)
+                    if(posd.PositionState == PositionState.Decrease || posd.PositionState == PositionState.Close || posd.PositionState == PositionState.Liquidate)
                     {
-                        response.Add(pos);
+                        response.Add(new PositionDTOViewHistory()
+                        {
+                            CollateralToken = pos.CollateralToken,
+                            IndexToken = pos.IndexToken,
+                            EntryPrice = posd.EntryPrice,
+                            Side = pos.Side,
+                            Size = posd.SizeChanged,
+                            Pnl = posd.Pnl
+                        });
                     }
                 }
             }

@@ -21,11 +21,9 @@ namespace FDex.Application.Features.Positions.Handlers.Queries
         {
             await using var scope = _serviceProvider.CreateAsyncScope();
             var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-            var _mapper = scope.ServiceProvider.GetRequiredService<IMapper>();
             var histories = await _unitOfWork.PositionRepository.GetPositionHistoriesInDetails(request.Wallet);
             _unitOfWork.Dispose();
-            List<PositionDTOViewHistory> historyDTOs = _mapper.Map<List<PositionDTOViewHistory>>(histories);
-            return historyDTOs;
+            return histories;
         }
     }
 }

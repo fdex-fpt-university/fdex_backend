@@ -33,7 +33,7 @@ namespace FDex.Application.Services
         bool isFirstParam = true;
         private BigInteger _latestBlockNumber = 0;
         private BigInteger _currentReporterBlockNumber = 34002213;
-        private BigInteger _currentCommonBlockNumber = 34403044;
+        private BigInteger _currentCommonBlockNumber = 34597299;
         private BigInteger _limitBlockNumber = 9999;
         const string RPC_URL = "https://sly-long-cherry.bsc-testnet.quiknode.pro/4ac0090884736ecd32a595fe2ec55910ca239cdb/";
 
@@ -49,7 +49,7 @@ namespace FDex.Application.Services
         {
             await using var scope = _serviceProvider.CreateAsyncScope();
             _latestBlockNumber = await _web3.Eth.Blocks.GetBlockNumber.SendRequestAsync();
-            var poolAddress = "0x713B1c99A5871b6Ea58C890305DD7066FC01988b";
+            var poolAddress = "0x8B8DC0A49f0F401f575f8DC3AA3641BbBCca9194";
             var oracleAddress = "0x1E16D408a6ae4E2a867cd33F15cb7E17441139c1";
             var increasePositionEventHandler = _web3.Eth.GetEvent<FDexIncreaPositionDTO>(poolAddress);
             var decreasePositionEventHandler = _web3.Eth.GetEvent<FDexDecreaPositionDTO>(poolAddress);
@@ -278,7 +278,6 @@ namespace FDex.Application.Services
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                         string key = "0x" + BitConverter.ToString(log.Event.Key).Replace("-", "");
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
-                        foundPosition.Size = log.Event.Size.ToString();
                         PositionDetail posd = new()
                         {
                             Id = Guid.NewGuid(),
@@ -307,7 +306,6 @@ namespace FDex.Application.Services
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                         string key = "0x" + BitConverter.ToString(log.Event.Key).Replace("-", "");
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
-                        foundPosition.Size = log.Event.Size.ToString();
                         PositionDetail posd = new()
                         {
                             Id = Guid.NewGuid(),
@@ -362,7 +360,6 @@ namespace FDex.Application.Services
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                         string key = "0x" + BitConverter.ToString(log.Event.Key).Replace("-", "");
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
-                        foundPosition.Size = log.Event.Size.ToString();
                         PositionDetail posd = new()
                         {
                             Id = Guid.NewGuid(),
