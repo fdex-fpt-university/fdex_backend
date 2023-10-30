@@ -17,6 +17,18 @@ namespace FDex.Persistence.Repositories
             _context = context;
         }
 
+        public async Task<List<PositionDTOLeaderboardItemView>> GetLeaderboardPositionsAsync(bool? isLeverageAsc, bool? isSizeAsc, bool? isPNLAsc)
+        {
+            List<PositionDTOLeaderboardItemView> response = new();
+            var positions = await _context.Positions.Include(p => p.PositionDetails).ToListAsync();
+            foreach(var position in positions)
+            {
+                var responseItem = new PositionDTOLeaderboardItemView();
+                response.Add(responseItem);
+            }
+            return response;
+        }
+
         public async Task<List<PositionDTOViewHistory>> GetPositionHistoriesInDetails(string wallet)
         {
             List<PositionDTOViewHistory> response = new();
@@ -40,7 +52,8 @@ namespace FDex.Persistence.Repositories
                             EntryPrice = posd.EntryPrice,
                             Side = pos.Side,
                             Size = posd.SizeChanged,
-                            Pnl = posd.Pnl
+                            Pnl = posd.Pnl,
+                            Time = posd.Time
                         });
                     }
                 }
