@@ -25,6 +25,9 @@ namespace FDex.Api.Controllers
 
         [HttpGet("[action]")]
         public async Task<List<PositionDTOViewHistory>> GetHitories([FromQuery] GetPositionHistoriesRequest query) => await _mediator.Send(query);
+
+        [HttpGet("[action]")]
+        public async Task<List<PositionDTOLeaderboardItemView>> GetLeaderboardPositions([FromQuery] GetLeaderboardPositionsRequest query) => await _mediator.Send(query);
     }
 }
 

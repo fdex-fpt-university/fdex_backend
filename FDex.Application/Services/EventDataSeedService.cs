@@ -13,6 +13,7 @@ using FDex.Domain.Entities;
 using FDex.Domain.Enumerations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Nethereum.BlockchainProcessing.BlockStorage.Entities;
 using Nethereum.Contracts;
 using Nethereum.Hex.HexTypes;
 using Nethereum.JsonRpc.Client;
@@ -35,7 +36,7 @@ namespace FDex.Application.Services
         private BigInteger _currentReporterBlockNumber = 34002213;
         private BigInteger _currentCommonBlockNumber = 34597299;
         private BigInteger _limitBlockNumber = 9999;
-        const string RPC_URL = "https://sly-long-cherry.bsc-testnet.quiknode.pro/4ac0090884736ecd32a595fe2ec55910ca239cdb/";
+        const string RPC_URL = "https://bsc.getblock.io/6d5630b5-f63b-4830-bc17-90d9c7ada49e/testnet/";
 
         public EventDataSeedService(IMapper mapper, IServiceProvider serviceProvider)
         {
@@ -106,11 +107,14 @@ namespace FDex.Application.Services
                     foreach (var log in reporterPostedEvents)
                     {
                         var foundReporterPosted = await _unitOfWork.ReporterRepository.FindAsync(log.Event.Wallet);
+                        //var receipt = await _web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(log.Log.TransactionHash);
+                        //var block = await _web3.Eth.Blocks.GetBlockWithTransactionsByHash.SendRequestAsync(receipt.BlockHash);
                         if (foundReporterPosted != null)
                         {
                             Reporter postingReporter = await _unitOfWork.ReporterRepository.FindAsync(log.Event.Wallet);
                             postingReporter.ReportCount += 1;
                             postingReporter.LastReportedDate = DateTime.Now;
+                            //postingReporter.LastReportedDate = DateTimeOffset.FromUnixTimeSeconds((long)block.Timestamp.Value).LocalDateTime;
                             _unitOfWork.ReporterRepository.Update(postingReporter);
                         }
                     }
@@ -132,16 +136,19 @@ namespace FDex.Application.Services
                     {
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                         var foundUser = await _unitOfWork.UserRepository.FindAsync(log.Event.Wallet);
+                        var receipt = await _web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(log.Log.TransactionHash);
+                        var block = await _web3.Eth.Blocks.GetBlockWithTransactionsByHash.SendRequestAsync(receipt.BlockHash);
                         if (foundUser == null)
                         {
                             User user = new()
                             {
                                 Wallet = log.Event.Wallet,
-                                CreatedDate = DateTime.Now
+                                CreatedDate = DateTimeOffset.FromUnixTimeSeconds((long)block.Timestamp.Value).LocalDateTime
                             };
                             await _unitOfWork.UserRepository.AddAsync(user);
                         }
                         var foundSwap = await _unitOfWork.SwapRepository.FindAsync(log.Log.TransactionHash);
+                        
                         if (foundSwap == null)
                         {
                             SwapDTOAdd rawSwap = new()
@@ -153,7 +160,7 @@ namespace FDex.Application.Services
                                 AmountIn = log.Event.AmountIn,
                                 AmountOut = log.Event.AmountOut,
                                 Fee = log.Event.Fee * log.Event.MarkPrice,
-                                Time = DateTime.Now
+                                Time = DateTimeOffset.FromUnixTimeSeconds((long)block.Timestamp.Value).LocalDateTime
                             };
                             Swap swap = _mapper.Map<Swap>(rawSwap);
                             await _unitOfWork.SwapRepository.AddAsync(swap);
@@ -166,12 +173,14 @@ namespace FDex.Application.Services
                     {
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                         var foundUser = await _unitOfWork.UserRepository.FindAsync(log.Event.Wallet);
+                        var receipt = await _web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(log.Log.TransactionHash);
+                        var block = await _web3.Eth.Blocks.GetBlockWithTransactionsByHash.SendRequestAsync(receipt.BlockHash);
                         if (foundUser == null)
                         {
                             User user = new()
                             {
                                 Wallet = log.Event.Wallet,
-                                CreatedDate = DateTime.Now
+                                CreatedDate = DateTimeOffset.FromUnixTimeSeconds((long)block.Timestamp.Value).LocalDateTime
                             };
                             await _unitOfWork.UserRepository.AddAsync(user);
                         }
@@ -185,7 +194,7 @@ namespace FDex.Application.Services
                                 Asset = log.Event.Asset,
                                 Amount = log.Event.Amount,
                                 Fee = log.Event.Fee * log.Event.MarkPriceIn,
-                                DateAdded = DateTime.Now
+                                DateAdded = DateTimeOffset.FromUnixTimeSeconds((long)block.Timestamp.Value).LocalDateTime
                             };
                             AddLiquidity addLiquidity = _mapper.Map<AddLiquidity>(rawAddLiquidity);
                             await _unitOfWork.AddLiquidityRepository.AddAsync(addLiquidity);
@@ -201,12 +210,14 @@ namespace FDex.Application.Services
                             Console.WriteLine("[DEV-INF] Decoding an open position event ...");
                             var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                             var foundUser = await _unitOfWork.UserRepository.FindAsync(log.Event.Wallet);
+                            var receipt = await _web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(log.Log.TransactionHash);
+                            var block = await _web3.Eth.Blocks.GetBlockWithTransactionsByHash.SendRequestAsync(receipt.BlockHash);
                             if (foundUser == null)
                             {
                                 User user = new()
                                 {
                                     Wallet = log.Event.Wallet,
-                                    CreatedDate = DateTime.Now
+                                    CreatedDate = DateTimeOffset.FromUnixTimeSeconds((long)block.Timestamp.Value).LocalDateTime
                                 };
                                 await _unitOfWork.UserRepository.AddAsync(user);
                             }
@@ -225,7 +236,7 @@ namespace FDex.Application.Services
                                     Side = log.Event.Side == '1',
                                     Leverage = (int)(log.Event.Size / log.Event.CollateralValue),
                                     TradingVolumn = log.Event.SizeChanged.ToString(),
-                                    LastUpdatedDate = DateTime.Now
+                                    LastUpdatedDate = DateTimeOffset.FromUnixTimeSeconds((long)block.Timestamp.Value).LocalDateTime
                                 };
                                 await _unitOfWork.PositionRepository.AddAsync(pos);
                                 PositionDetail posd = new()
@@ -239,7 +250,7 @@ namespace FDex.Application.Services
                                     PositionState = PositionState.Open,
                                     SizeChanged = log.Event.SizeChanged.ToString(),
                                     FeeValue = log.Event.FeeValue.ToString(),
-                                    Time = DateTime.Now
+                                    Time = DateTimeOffset.FromUnixTimeSeconds((long)block.Timestamp.Value).LocalDateTime
                                 };
                                 await _unitOfWork.PositionDetailRepository.AddAsync(posd);
                             }
@@ -256,7 +267,7 @@ namespace FDex.Application.Services
                                     PositionState = PositionState.Open,
                                     SizeChanged = log.Event.SizeChanged.ToString(),
                                     FeeValue = log.Event.FeeValue.ToString(),
-                                    Time = DateTime.Now
+                                    Time = DateTimeOffset.FromUnixTimeSeconds((long)block.Timestamp.Value).LocalDateTime
                                 };
                                 await _unitOfWork.PositionDetailRepository.AddAsync(posd);
                                 foundPosition.TradingVolumn = (BigInteger.Parse(foundPosition.TradingVolumn) + log.Event.Size).ToString();
@@ -278,6 +289,8 @@ namespace FDex.Application.Services
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                         string key = "0x" + BitConverter.ToString(log.Event.Key).Replace("-", "");
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
+                        var receipt = await _web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(log.Log.TransactionHash);
+                        var block = await _web3.Eth.Blocks.GetBlockWithTransactionsByHash.SendRequestAsync(receipt.BlockHash);
                         PositionDetail posd = new()
                         {
                             Id = Guid.NewGuid(),
@@ -289,9 +302,9 @@ namespace FDex.Application.Services
                             PositionState = PositionState.Increase,
                             SizeChanged = log.Event.SizeChanged.ToString(),
                             FeeValue = log.Event.FeeValue.ToString(),
-                            Time = DateTime.Now
+                            Time = DateTimeOffset.FromUnixTimeSeconds((long)block.Timestamp.Value).LocalDateTime
                         };
-                        foundPosition.LastUpdatedDate = DateTime.Now;
+                        foundPosition.LastUpdatedDate = DateTimeOffset.FromUnixTimeSeconds((long)block.Timestamp.Value).LocalDateTime;
                         foundPosition.Size = log.Event.Size.ToString();
                         foundPosition.TradingVolumn = (BigInteger.Parse(foundPosition.TradingVolumn) + log.Event.SizeChanged).ToString();
                         _unitOfWork.PositionRepository.Update(foundPosition);
@@ -306,6 +319,8 @@ namespace FDex.Application.Services
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                         string key = "0x" + BitConverter.ToString(log.Event.Key).Replace("-", "");
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
+                        var receipt = await _web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(log.Log.TransactionHash);
+                        var block = await _web3.Eth.Blocks.GetBlockWithTransactionsByHash.SendRequestAsync(receipt.BlockHash);
                         PositionDetail posd = new()
                         {
                             Id = Guid.NewGuid(),
@@ -317,9 +332,9 @@ namespace FDex.Application.Services
                             PositionState = PositionState.Decrease,
                             SizeChanged = log.Event.SizeChanged.ToString(),
                             FeeValue = log.Event.FeeValue.ToString(),
-                            Time = DateTime.Now
+                            Time = DateTimeOffset.FromUnixTimeSeconds((long)block.Timestamp.Value).LocalDateTime
                         };
-                        foundPosition.LastUpdatedDate = DateTime.Now;
+                        foundPosition.LastUpdatedDate = DateTimeOffset.FromUnixTimeSeconds((long)block.Timestamp.Value).LocalDateTime;
                         foundPosition.Size = log.Event.Size.ToString();
                         _unitOfWork.PositionRepository.Update(foundPosition);
                         await _unitOfWork.PositionDetailRepository.AddAsync(posd);
@@ -333,6 +348,8 @@ namespace FDex.Application.Services
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                         string key = "0x" + BitConverter.ToString(log.Event.Key).Replace("-", "");
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
+                        var receipt = await _web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(log.Log.TransactionHash);
+                        var block = await _web3.Eth.Blocks.GetBlockWithTransactionsByHash.SendRequestAsync(receipt.BlockHash);
                         PositionDetail posd = new()
                         {
                             Id = Guid.NewGuid(),
@@ -344,9 +361,9 @@ namespace FDex.Application.Services
                             PositionState = PositionState.Close,
                             SizeChanged = log.Event.Size.ToString(),
                             Pnl = log.Event.Pnl.Sig == 1 ? log.Event.Pnl.Abs.ToString() : (~log.Event.Pnl.Abs + 1).ToString(),
-                            Time = DateTime.Now
+                            Time = DateTimeOffset.FromUnixTimeSeconds((long)block.Timestamp.Value).LocalDateTime
                         };
-                        foundPosition.LastUpdatedDate = DateTime.Now;
+                        foundPosition.LastUpdatedDate = DateTimeOffset.FromUnixTimeSeconds((long)block.Timestamp.Value).LocalDateTime;
                         foundPosition.Size = "0";
                         _unitOfWork.PositionRepository.Update(foundPosition);
                         await _unitOfWork.PositionDetailRepository.AddAsync(posd);
@@ -360,6 +377,8 @@ namespace FDex.Application.Services
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                         string key = "0x" + BitConverter.ToString(log.Event.Key).Replace("-", "");
                         Position foundPosition = await _unitOfWork.PositionRepository.GetPositionInDetails(key);
+                        var receipt = await _web3.Eth.Transactions.GetTransactionReceipt.SendRequestAsync(log.Log.TransactionHash);
+                        var block = await _web3.Eth.Blocks.GetBlockWithTransactionsByHash.SendRequestAsync(receipt.BlockHash);
                         PositionDetail posd = new()
                         {
                             Id = Guid.NewGuid(),
@@ -371,9 +390,9 @@ namespace FDex.Application.Services
                             PositionState = PositionState.Liquidate,
                             SizeChanged = log.Event.Size.ToString(),
                             Pnl = log.Event.Pnl.Sig == 1 ? log.Event.Pnl.Abs.ToString() : (~log.Event.Pnl.Abs + 1).ToString(),
-                            Time = DateTime.Now
+                            Time = DateTimeOffset.FromUnixTimeSeconds((long)block.Timestamp.Value).LocalDateTime
                         };
-                        foundPosition.LastUpdatedDate = DateTime.Now;
+                        foundPosition.LastUpdatedDate = DateTimeOffset.FromUnixTimeSeconds((long)block.Timestamp.Value).LocalDateTime;
                         foundPosition.Size = "0";
                         _unitOfWork.PositionRepository.Update(foundPosition);
                         await _unitOfWork.PositionDetailRepository.AddAsync(posd);

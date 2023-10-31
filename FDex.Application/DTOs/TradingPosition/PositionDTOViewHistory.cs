@@ -11,6 +11,7 @@ namespace FDex.Application.DTOs.TradingPosition
         public string EntryPrice { get; set; }
         public bool Side { get; set; }
         public string Pnl { get; set; }
+        public DateTime Time { get; set; }
     }
 }
 

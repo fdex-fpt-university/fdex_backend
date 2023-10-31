@@ -13,6 +13,8 @@ namespace FDex.Application.Contracts.Persistence
         Task<List<PositionDTOViewHistory>> GetPositionHistoriesInDetails(string wallet);
 
         Task<List<Position>> GetPositionsInDetails(string wallet);
+
+        Task<List<PositionDTOLeaderboardItemView>> GetLeaderboardPositionsAsync(bool? isLeverageAsc, bool? isSizeAsc, bool? isPNLAsc);
     }
 }
 
