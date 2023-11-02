@@ -3,7 +3,7 @@ using System.Numerics;
 
 namespace FDex.Domain.Entities
 {
-	public class AddLiquidity
+	public class Liquidity
 	{
         public string TxnHash { get; set; }
         public string Wallet { get; set; }

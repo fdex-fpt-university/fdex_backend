@@ -11,7 +11,7 @@ namespace FDex.Persistence.Repositories
         private ISwapRepository _swapRepository;
         private IUserRepository _userRepository;
         private IReporterRepository _reporterRepository;
-        private IAddLiquidityRepository _addLiquidityRepository;
+        private ILiquidityRepository _liquidityRepository;
         private IPositionRepository _positionRepository;
         private IPositionDetailRepository _positionDetailRepository;
 
@@ -23,7 +23,7 @@ namespace FDex.Persistence.Repositories
         public ISwapRepository SwapRepository => _swapRepository ??= new SwapRepository(_context);
         public IUserRepository UserRepository => _userRepository ??= new UserRepository(_context);
         public IReporterRepository ReporterRepository => _reporterRepository ??= new ReporterRepository(_context);
-        public IAddLiquidityRepository AddLiquidityRepository => _addLiquidityRepository ??= new AddLiquidityRepository(_context);
+        public ILiquidityRepository LiquidityRepository => _liquidityRepository ??= new LiquidityRepository(_context);
         public IPositionRepository PositionRepository => _positionRepository ??= new PositionRepository(_context);
         public IPositionDetailRepository PositionDetailRepository => _positionDetailRepository ??= new PositionDetailRepository(_context);
 

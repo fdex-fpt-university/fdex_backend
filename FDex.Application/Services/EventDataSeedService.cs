@@ -58,7 +58,7 @@ namespace FDex.Application.Services
             var closePositionEventHandler = _web3.Eth.GetEvent<FDexClosePositionDTO>(poolAddress);
             var liquidatePositionEventHandler = _web3.Eth.GetEvent<LiquidatePositionDTO>(poolAddress);
             var swapEventHandler = _web3.Eth.GetEvent<SwapDTO>(poolAddress);
-            var addLiquidityEventHandler = _web3.Eth.GetEvent<AddLiquidityDTO>(poolAddress);
+            var liquidityEventHandler = _web3.Eth.GetEvent<LiquidityDTO>(poolAddress);
             var reporterAddedEventHandler = _web3.Eth.GetEvent<ReporterAddedDTO>(oracleAddress);
             var reporterRemovedEventHandler = _web3.Eth.GetEvent<ReporterRemovedDTO>(oracleAddress);
             var reporterPostedEventHandler = _web3.Eth.GetEvent<ReporterPostedDTO>(oracleAddress);
@@ -70,7 +70,7 @@ namespace FDex.Application.Services
                 BlockParameter endReporterBlock = HandleBlockParameter(REPORTER_CONTRACT);
 
                 var filterAllSwapEvents = swapEventHandler.CreateFilterInput(startCommonBlock, endCommonBlock);
-                var filterAllAddLiquidity = addLiquidityEventHandler.CreateFilterInput(startCommonBlock, endCommonBlock);
+                var filterAllLiquidity = liquidityEventHandler.CreateFilterInput(startCommonBlock, endCommonBlock);
                 var filterAllReporterAdded = reporterAddedEventHandler.CreateFilterInput(startReporterBlock, endReporterBlock);
                 var filterAllReporterRemoved = reporterRemovedEventHandler.CreateFilterInput(startReporterBlock, endReporterBlock);
                 var filterAllReporterPosted = reporterPostedEventHandler.CreateFilterInput(startReporterBlock, endReporterBlock);
@@ -125,7 +125,7 @@ namespace FDex.Application.Services
                 if (_currentCommonBlockNumber <= _latestBlockNumber)
                 {
                     var swapEvents = await swapEventHandler.GetAllChangesAsync(filterAllSwapEvents);
-                    var addLiquidityEvents = await addLiquidityEventHandler.GetAllChangesAsync(filterAllAddLiquidity);
+                    var liquidityEvents = await liquidityEventHandler.GetAllChangesAsync(filterAllLiquidity);
                     var increasePositionEvents = await increasePositionEventHandler.GetAllChangesAsync(filterAllIncreasePosition);
                     var decreasePositionEvents = await decreasePositionEventHandler.GetAllChangesAsync(filterAllDecreasePosition);
                     var openPositionEvents = await openPositionEventHandler.GetAllChangesAsync(filterAllOpenPosition);
@@ -169,7 +169,7 @@ namespace FDex.Application.Services
                         _unitOfWork.Dispose();
                     }
 
-                    foreach (var log in addLiquidityEvents)
+                    foreach (var log in liquidityEvents)
                     {
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                         var foundUser = await _unitOfWork.UserRepository.FindAsync(log.Event.Wallet);
@@ -184,10 +184,10 @@ namespace FDex.Application.Services
                             };
                             await _unitOfWork.UserRepository.AddAsync(user);
                         }
-                        var foundAddLiquidity = await _unitOfWork.AddLiquidityRepository.FindAsync(log.Log.TransactionHash);
-                        if (foundAddLiquidity == null)
+                        var foundLiquidity = await _unitOfWork.LiquidityRepository.FindAsync(log.Log.TransactionHash);
+                        if (foundLiquidity == null)
                         {
-                            AddLiquidityDTOAdd rawAddLiquidity = new()
+                            LiquidityDTOAdd rawLiquidity = new()
                             {
                                 TxnHash = log.Log.TransactionHash,
                                 Wallet = log.Event.Wallet,
@@ -196,8 +196,8 @@ namespace FDex.Application.Services
                                 Fee = log.Event.Fee * log.Event.MarkPriceIn,
                                 DateAdded = DateTimeOffset.FromUnixTimeSeconds((long)block.Timestamp.Value).LocalDateTime
                             };
-                            AddLiquidity addLiquidity = _mapper.Map<AddLiquidity>(rawAddLiquidity);
-                            await _unitOfWork.AddLiquidityRepository.AddAsync(addLiquidity);
+                            Liquidity liquidity = _mapper.Map<Liquidity>(rawLiquidity);
+                            await _unitOfWork.LiquidityRepository.AddAsync(liquidity);
                         }
                         await _unitOfWork.SaveAsync();
                         _unitOfWork.Dispose();

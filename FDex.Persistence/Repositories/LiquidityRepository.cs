@@ -5,10 +5,10 @@ using FDex.Persistence.DbContexts;
 
 namespace FDex.Persistence.Repositories
 {
-	public class AddLiquidityRepository : GenericRepository<AddLiquidity>, IAddLiquidityRepository
+	public class LiquidityRepository : GenericRepository<Liquidity>, ILiquidityRepository
 	{
         public readonly FDexDbContext _context;
-        public AddLiquidityRepository(FDexDbContext context) : base(context)
+        public LiquidityRepository(FDexDbContext context) : base(context)
 		{
 			_context = context;
 		}

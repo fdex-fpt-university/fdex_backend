@@ -5,7 +5,7 @@ using Nethereum.ABI.FunctionEncoding.Attributes;
 namespace FDex.Application.DTOs.Liquidity
 {
     [Event("AddLiquidity")]
-    public class AddLiquidityDTOBase : IEventDTO
+    public class LiquidityDTOBase : IEventDTO
     {
         [Parameter("address", "wallet", 1, false)]
         public virtual string Wallet { get; set; }
