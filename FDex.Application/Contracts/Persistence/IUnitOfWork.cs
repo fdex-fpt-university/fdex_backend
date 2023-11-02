@@ -6,7 +6,7 @@ namespace FDex.Application.Contracts.Persistence
         ISwapRepository SwapRepository { get; }
         IUserRepository UserRepository { get; }
         IReporterRepository ReporterRepository { get; }
-        IAddLiquidityRepository AddLiquidityRepository { get; }
+        ILiquidityRepository LiquidityRepository { get; }
         IPositionRepository PositionRepository { get; }
         IPositionDetailRepository PositionDetailRepository { get; }
 

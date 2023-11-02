@@ -35,7 +35,7 @@ namespace FDex.Persistence.Common
             services.AddTransient<IUnitOfWork, UnitOfWork>();
             services.AddTransient<ISwapRepository, SwapRepository>();
             services.AddTransient<IUserRepository, UserRepository>();
-            services.AddTransient<IAddLiquidityRepository, AddLiquidityRepository>();
+            services.AddTransient<ILiquidityRepository, LiquidityRepository>();
             services.AddTransient<IPositionRepository, PositionRepository>();
             services.AddTransient<IPositionDetailRepository, PositionDetailRepository>();
 

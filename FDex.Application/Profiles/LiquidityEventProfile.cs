@@ -5,11 +5,11 @@ using FDex.Domain.Entities;
 
 namespace FDex.Application.Profiles
 {
-	public class AddLiquidityEventProfile : Profile
+	public class LiquidityEventProfile : Profile
 	{
-		public AddLiquidityEventProfile()
+		public LiquidityEventProfile()
 		{
-			CreateMap<AddLiquidityDTOAdd, AddLiquidity>();
+			CreateMap<LiquidityDTOAdd, Liquidity>();
 				
 		}
 	}

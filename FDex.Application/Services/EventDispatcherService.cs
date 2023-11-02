@@ -53,7 +53,7 @@ namespace FDex.Application.Services
                 {
                     StreamingWebSocketClient client = new(HandleWebsocketString());
                     NewFilterInput swapFilterInput = Event<SwapDTO>.GetEventABI().CreateFilterInput();
-                    NewFilterInput addLiquidityFilterInput = Event<AddLiquidityDTO>.GetEventABI().CreateFilterInput();
+                    NewFilterInput liquidityFilterInput = Event<LiquidityDTO>.GetEventABI().CreateFilterInput();
                     NewFilterInput reporterAddedFilterInput = Event<ReporterAddedDTO>.GetEventABI().CreateFilterInput();
                     NewFilterInput reporterRemovedFilterInput = Event<ReporterRemovedDTO>.GetEventABI().CreateFilterInput();
                     NewFilterInput reporterPostedFilterInput = Event<ReporterPostedDTO>.GetEventABI().CreateFilterInput();
@@ -64,7 +64,7 @@ namespace FDex.Application.Services
                     NewFilterInput liquidatePositionFilterInput = Event<LiquidatePositionDTO>.GetEventABI().CreateFilterInput();
 
                     EthLogsObservableSubscription swapSubscription = new(client);
-                    EthLogsObservableSubscription addLiquiditySubscription = new(client);
+                    EthLogsObservableSubscription liquiditySubscription = new(client);
                     EthLogsObservableSubscription reporterAddedSubscription = new(client);
                     EthLogsObservableSubscription reporterRemovedSubscription = new(client);
                     EthLogsObservableSubscription reporterPostedSubscription = new(client);
@@ -151,32 +151,32 @@ namespace FDex.Application.Services
                         _unitOfWork.Dispose();
                     });
 
-                    addLiquiditySubscription.GetSubscriptionDataResponsesAsObservable().Subscribe(async log =>
+                    liquiditySubscription.GetSubscriptionDataResponsesAsObservable().Subscribe(async log =>
                     {
                         Console.WriteLine("[DEV-INF] Decoding an add liquidity event ...");
-                        var decodedAddLiquidity = Event<AddLiquidityDTO>.DecodeEvent(log);
+                        var decodedLiquidity = Event<LiquidityDTO>.DecodeEvent(log);
                         var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-                        var foundUser = await _unitOfWork.UserRepository.FindAsync(decodedAddLiquidity.Event.Wallet);
+                        var foundUser = await _unitOfWork.UserRepository.FindAsync(decodedLiquidity.Event.Wallet);
                         if (foundUser == null)
                         {
                             User user = new()
                             {
-                                Wallet = decodedAddLiquidity.Event.Wallet,
+                                Wallet = decodedLiquidity.Event.Wallet,
                                 CreatedDate = DateTime.Now
                             };
                             await _unitOfWork.UserRepository.AddAsync(user);
                         }
-                        AddLiquidityDTOAdd addLiquidityDTOAdd = new()
+                        LiquidityDTOAdd liquidityDTOAdd = new()
                         {
-                            TxnHash = decodedAddLiquidity.Log.TransactionHash,
-                            Wallet = decodedAddLiquidity.Event.Wallet,
-                            Asset = decodedAddLiquidity.Event.Asset,
-                            Amount = decodedAddLiquidity.Event.Amount,
-                            Fee = decodedAddLiquidity.Event.Fee * decodedAddLiquidity.Event.MarkPriceIn,
+                            TxnHash = decodedLiquidity.Log.TransactionHash,
+                            Wallet = decodedLiquidity.Event.Wallet,
+                            Asset = decodedLiquidity.Event.Asset,
+                            Amount = decodedLiquidity.Event.Amount,
+                            Fee = decodedLiquidity.Event.Fee * decodedLiquidity.Event.MarkPriceIn,
                             DateAdded = DateTime.Now
                         };
-                        AddLiquidity addLiquidity = _mapper.Map<AddLiquidity>(addLiquidityDTOAdd);
-                        await _unitOfWork.AddLiquidityRepository.AddAsync(addLiquidity);
+                        Liquidity liquidity = _mapper.Map<Liquidity>(liquidityDTOAdd);
+                        await _unitOfWork.LiquidityRepository.AddAsync(liquidity);
                         await _unitOfWork.SaveAsync();
                         _unitOfWork.Dispose();
                     });
@@ -368,6 +368,7 @@ namespace FDex.Application.Services
 
                     await client.StartAsync();
                     await swapSubscription.SubscribeAsync(swapFilterInput);
+                    await liquiditySubscription.SubscribeAsync(liquidityFilterInput);
                     await reporterAddedSubscription.SubscribeAsync(reporterAddedFilterInput);
                     await reporterRemovedSubscription.SubscribeAsync(reporterRemovedFilterInput);
                     await reporterPostedSubscription.SubscribeAsync(reporterPostedFilterInput);
@@ -384,6 +385,7 @@ namespace FDex.Application.Services
                             //restart client
                             Console.WriteLine($"[DEV-INF] Client {client.WebSocketState}, restarting ...");
                             await swapSubscription.UnsubscribeAsync();
+                            await liquiditySubscription.UnsubscribeAsync();
                             await reporterAddedSubscription.UnsubscribeAsync();
                             await reporterRemovedSubscription.UnsubscribeAsync();
                             await reporterPostedSubscription.UnsubscribeAsync();
@@ -395,6 +397,7 @@ namespace FDex.Application.Services
                             await client.StopAsync();
                             await client.StartAsync();
                             await swapSubscription.SubscribeAsync(swapFilterInput);
+                            await liquiditySubscription.SubscribeAsync(liquidityFilterInput);
                             await reporterAddedSubscription.SubscribeAsync(reporterAddedFilterInput);
                             await reporterRemovedSubscription.SubscribeAsync(reporterRemovedFilterInput);
                             await reporterPostedSubscription.SubscribeAsync(reporterPostedFilterInput);
