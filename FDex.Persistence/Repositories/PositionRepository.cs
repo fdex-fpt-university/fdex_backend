@@ -20,10 +20,26 @@ namespace FDex.Persistence.Repositories
         public async Task<List<PositionDTOLeaderboardItemView>> GetLeaderboardPositionsAsync(bool? isLeverageAsc, bool? isSizeAsc, bool? isPNLAsc)
         {
             List<PositionDTOLeaderboardItemView> response = new();
-            var positions = await _context.Positions.Include(p => p.PositionDetails).ToListAsync();
+            var positions = await _context.Positions.Include(p => p.PositionDetails).Include(p => p.User).ToListAsync();
             foreach(var position in positions)
             {
-                var responseItem = new PositionDTOLeaderboardItemView();
+                List<PositionDetail> positionAggregates = new();
+                var responseItem = new PositionDTOLeaderboardItemView()
+                {
+                    Wallet = position.User.Wallet,
+                    IndexToken = position.IndexToken,
+                    Side = position.Side,
+                    Leverage = position.Leverage,
+                    Size = position.Size,
+                    EntryPrice = "",
+                    PNL = "",
+                    Time = DateTime.Now
+                };
+                var positionDetails = position.PositionDetails.OrderBy(pd => pd.Time);
+                foreach(var positionDetail in positionDetails)
+                {
+
+                }
                 response.Add(responseItem);
             }
             return response;
