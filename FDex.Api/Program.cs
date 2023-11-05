@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using FDex.Application.Services;
 using FDex.Api.Middleware;
+using FDex.Application.Extensions;
 
 internal class Program
 {
@@ -24,6 +25,9 @@ internal class Program
         builder.Services.AddSwaggerGen();
         builder.Services.AddHostedService<EventDispatcherService>();
         builder.Services.AddHostedService<EventDataSeedService>();
+        builder.Services.AddControllers().AddJsonOptions(options =>
+            options.JsonSerializerOptions.Converters.Add(new DoubleInfinityConverter())
+        );
         builder.Services.Configure<HostOptions>(options =>
         {
             options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;

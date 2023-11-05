@@ -61,6 +61,7 @@
     <None Remove="Features\Positions\Requests\Queries\" />
     <None Remove="Features\Positions\Handlers\Queries\" />
     <None Remove="DTOs\User\" />
+    <None Remove="Extensions\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Contracts\" />
@@ -107,6 +108,7 @@
     <Folder Include="Models\Application\" />
     <Folder Include="Features\Positions\Handlers\Commands\" />
     <Folder Include="Features\Positions\Requests\Commands\" />
+    <Folder Include="Extensions\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FDex.Domain\FDex.Domain.csproj" />
