@@ -125,6 +125,10 @@ namespace FDex.Persistence.Repositories
                         }
                     }
                     responseItem.AvgLeverage /= positions.Count();
+                    if(responseItem.AvgLeverage == null)
+                    {
+                        responseItem.AvgLeverage = 0;
+                    }
                 }
                 response.Add(responseItem);
             }
