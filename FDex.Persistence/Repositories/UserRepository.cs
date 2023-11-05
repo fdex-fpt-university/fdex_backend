@@ -4,11 +4,8 @@ using FDex.Application.Common.Models;
 using FDex.Application.Contracts.Persistence;
 using FDex.Application.DTOs.User;
 using FDex.Domain.Entities;
-using FDex.Domain.Enumerations;
 using FDex.Persistence.DbContexts;
 using Microsoft.EntityFrameworkCore;
-using NBitcoin.Secp256k1;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace FDex.Persistence.Repositories
 {

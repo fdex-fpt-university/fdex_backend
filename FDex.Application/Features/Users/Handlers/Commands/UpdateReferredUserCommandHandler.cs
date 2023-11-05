@@ -26,11 +26,12 @@ namespace FDex.Application.Features.Users.Handlers.Commands
             {
                 return false;
             }
+            // Update referral user
             referringUser.ReferredUserOf = request.ReferralUser;
+            referringUser.ReferredUserDate = DateTime.Now;
             _unitOfWork.UserRepository.Update(referringUser);
             await _unitOfWork.SaveAsync();
             _unitOfWork.Dispose();
-
             return true;
         }
     }

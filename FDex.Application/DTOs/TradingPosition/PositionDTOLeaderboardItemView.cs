@@ -8,8 +8,9 @@ namespace FDex.Application.DTOs.TradingPosition
         public bool Side { get; set; }
         public double Leverage { get; set; }
         public string Size { get; set; }
-        public string ẺntyPrice { get; set; }
+        public string EntryPrice { get; set; }
         public string PNL { get; set; }
+        public DateTime Time { get; set; }
     }
 }
 
