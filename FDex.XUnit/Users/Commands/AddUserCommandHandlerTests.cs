@@ -17,7 +17,9 @@ namespace FDex.XUnit.Users.Commands
     {
         private readonly User _user;
         private AddUserCommandHandler _handler;
-        private readonly Mock<IServiceProvider> _mockSP;
+        private readonly Mock<IUnitOfWork> _mockUnitOfWork;
+        private readonly Mock<IUserRepository> _mockUserRepository;
+        private readonly Mock<IServiceProvider> _mockServiceProvider;
         private IReadOnlyList<User> _users;
 
         public AddUserCommandHandlerTests()
@@ -26,14 +28,18 @@ namespace FDex.XUnit.Users.Commands
             {
                 Wallet = "User Wallet Test X"
             };
-            _mockSP = MockServiceProvider.GetServiceProvider();
-            _handler = new AddUserCommandHandler(_mockSP.Object);
+            _mockUserRepository = MockUserRepository.GetUserRepository();
+            _mockUnitOfWork = MockUnitOfWork.GetUnitOfWork();
+            _mockServiceProvider = ServiceProviderFactory.GetServiceProvider(
+                (typeof(IUserRepository), _mockUserRepository.Object),
+                (typeof(IUnitOfWork), _mockUnitOfWork.Object));
+            _handler = new AddUserCommandHandler(_mockServiceProvider.Object);
         }
 
         [Fact]
         public async Task Valid_User_Added()
         {
-            await using var scope = _mockSP.Object.CreateAsyncScope();
+            await using var scope = _mockServiceProvider.Object.CreateAsyncScope();
             var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             _users = await _unitOfWork.UserRepository.GetAllAsync();
             var userCount = _users.Count();
@@ -47,7 +53,7 @@ namespace FDex.XUnit.Users.Commands
         [Fact]
         public async Task InValid_LeaveType_Added()
         {
-            await using var scope = _mockSP.Object.CreateAsyncScope();
+            await using var scope = _mockServiceProvider.Object.CreateAsyncScope();
             var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             _user.Wallet = null;
             _users = await _unitOfWork.UserRepository.GetAllAsync();

@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FDex.Persistence.Repositories
 {
-    public class GenericRepository<T> : IGenericRepository<T> where T : class
+    public abstract class GenericRepository<T> : IGenericRepository<T> where T : class
     {
 		private readonly FDexDbContext _context;
 
