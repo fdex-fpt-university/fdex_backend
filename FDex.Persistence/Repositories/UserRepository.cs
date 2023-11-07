@@ -125,6 +125,7 @@ namespace FDex.Persistence.Repositories
                         }
                     }
                     responseItem.AvgLeverage /= positions.Count();
+                    responseItem.AvgLeverage = Math.Round(responseItem.AvgLeverage, 2);
                     if(responseItem.AvgLeverage == null)
                     {
                         responseItem.AvgLeverage = 0;
@@ -132,11 +133,11 @@ namespace FDex.Persistence.Repositories
                 }
                 response.Add(responseItem);
             }
-            response = isTradingVolumeAsc.HasValue ? (isTradingVolumeAsc.Value ? response.OrderBy(item => item.TradingVol).ToList() : response.OrderByDescending(item => item.TradingVol).ToList()) : response;
+            response = isTradingVolumeAsc.HasValue ? (isTradingVolumeAsc.Value ? response.OrderBy(item => BigInteger.Parse(item.TradingVol)).ToList() : response.OrderByDescending(item => BigInteger.Parse(item.TradingVol)).ToList()) : response;
             response = isAvgLeverageAsc.HasValue ? (isAvgLeverageAsc.Value ? response.OrderBy(item => item.AvgLeverage).ToList() : response.OrderByDescending(item => item.AvgLeverage).ToList()) : response;
             response = isWinAsc.HasValue ? (isWinAsc.Value ? response.OrderBy(item => item.Win).ToList() : response.OrderByDescending(item => item.Win).ToList()) : response;
             response = isLossAsc.HasValue ? (isLossAsc.Value ? response.OrderBy(item => item.Loss).ToList() : response.OrderByDescending(item => item.Loss).ToList()) : response;
-            response = isPNLwFeesAsc.HasValue ? (isPNLwFeesAsc.Value ? response.OrderBy(item => item.PNLwFees).ToList() : response.OrderByDescending(item => item.PNLwFees).ToList()) : response;
+            response = isPNLwFeesAsc.HasValue ? (isPNLwFeesAsc.Value ? response.OrderBy(item => BigInteger.Parse(item.PNLwFees)).ToList() : response.OrderByDescending(item => BigInteger.Parse(item.PNLwFees)).ToList()) : response;
             return response;
         }
         public async Task<object> GetReferralAnalytics()
