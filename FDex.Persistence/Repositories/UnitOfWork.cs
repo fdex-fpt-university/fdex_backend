@@ -14,6 +14,7 @@ namespace FDex.Persistence.Repositories
         private ILiquidityRepository _liquidityRepository;
         private IPositionRepository _positionRepository;
         private IPositionDetailRepository _positionDetailRepository;
+        private IRewardRepository _rewardRepository;
 
         public UnitOfWork(FDexDbContext context)
         {
@@ -26,6 +27,7 @@ namespace FDex.Persistence.Repositories
         public ILiquidityRepository LiquidityRepository => _liquidityRepository ??= new LiquidityRepository(_context);
         public IPositionRepository PositionRepository => _positionRepository ??= new PositionRepository(_context);
         public IPositionDetailRepository PositionDetailRepository => _positionDetailRepository ??= new PositionDetailRepository(_context);
+        public IRewardRepository RewardRepository => _rewardRepository ??= new RewardRepository(_context);
 
         protected virtual void Dispose(bool disposing)
         {

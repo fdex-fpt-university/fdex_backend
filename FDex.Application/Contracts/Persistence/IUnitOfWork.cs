@@ -9,6 +9,7 @@ namespace FDex.Application.Contracts.Persistence
         ILiquidityRepository LiquidityRepository { get; }
         IPositionRepository PositionRepository { get; }
         IPositionDetailRepository PositionDetailRepository { get; }
+        IRewardRepository RewardRepository { get; }
 
         Task SaveAsync();
         void Dispose();

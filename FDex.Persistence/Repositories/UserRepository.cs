@@ -3,6 +3,7 @@ using System.Numerics;
 using FDex.Application.Common.Models;
 using FDex.Application.Contracts.Persistence;
 using FDex.Application.DTOs.User;
+using FDex.Application.Models.Infrastructure;
 using FDex.Domain.Entities;
 using FDex.Persistence.DbContexts;
 using Microsoft.EntityFrameworkCore;
@@ -140,7 +141,7 @@ namespace FDex.Persistence.Repositories
             response = isPNLwFeesAsc.HasValue ? (isPNLwFeesAsc.Value ? response.OrderBy(item => BigInteger.Parse(item.PNLwFees)).ToList() : response.OrderByDescending(item => BigInteger.Parse(item.PNLwFees)).ToList()) : response;
             return response;
         }
-        public async Task<object> GetReferralAnalytics()
+        public async Task<Analytic> GetReferralAnalytics()
         {
             var levelCounts = new Dictionary<int, int>();
             levelCounts = await _context.Users
@@ -155,7 +156,7 @@ namespace FDex.Persistence.Repositories
                     el => el.Level,
                     el => el.Count
                 );
-            object analytic = new
+            Analytic analytic = new Analytic
             {
                 Level0 = levelCounts.GetValueOrDefault(0),
                 Level1 = levelCounts.GetValueOrDefault(1),
@@ -185,6 +186,20 @@ namespace FDex.Persistence.Repositories
             };
 
             return rs;
+        }
+
+        public async Task<string> GetRewardAsync(string wallet)
+        {
+            decimal totalRewardAmount = 0;
+            List<Reward> rewards = await _context.Rewards.Where(r => r.Wallet.Equals(wallet)).ToListAsync();
+            foreach(var reward in rewards)
+            {
+                if (!reward.ClaimedDate.HasValue)
+                {
+                    totalRewardAmount += decimal.Parse(reward.Amount);
+                }
+            }
+            return totalRewardAmount.ToString();
         }
 
         public async Task<List<User>> GetUsersInDetailsAsync()

@@ -3,6 +3,7 @@ using FDex.Application.DTOs.Swap;
 using FDex.Application.DTOs.User;
 using FDex.Application.Features.Users.Requests.Commands;
 using FDex.Application.Features.Users.Requests.Queries;
+using FDex.Application.Models.Infrastructure;
 using FDex.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -45,10 +46,10 @@ namespace FDex.Api.Controllers
         }
 
         [HttpGet("[action]")]
-        public async Task<object> GetReferralSystemAnalytics()
+        public async Task<Analytic> GetReferralSystemAnalytics()
         {
-            object obj = await _mediator.Send(new GetReferralSystemAnalyticsRequest());
-            return obj;
+            Analytic analytic = await _mediator.Send(new GetReferralSystemAnalyticsRequest());
+            return analytic;
         }
 
         [HttpGet("[action]")]
@@ -61,6 +62,9 @@ namespace FDex.Api.Controllers
             await _mediator.Send(command);
             return true;
         }
+
+        [HttpPost("[action]")]
+        public async Task<bool> RewardClaimedAndSigned([FromBody] RewardClaimedAndSignedCommand command) => await _mediator.Send(command);
     }
 }
 
