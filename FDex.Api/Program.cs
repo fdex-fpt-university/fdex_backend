@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using FDex.Application.Services;
 using FDex.Api.Middleware;
 using FDex.Application.Extensions;
+using Hangfire;
 
 internal class Program
 {
@@ -18,7 +19,7 @@ internal class Program
         builder.Services.AddHealthChecks();
         builder.Services.AddHttpContextAccessor();
         builder.Services.ConfigurePersistenceServices(builder.Configuration);
-        builder.Services.ConfigureApplicationServices();
+        builder.Services.ConfigureApplicationServices(builder.Configuration);
         builder.Services.ConfigureInfrastructureServices();
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
@@ -63,6 +64,8 @@ internal class Program
         app.UseCors("CorsPolicy");
 
         app.MapControllers();
+
+        app.UseHangfireDashboard();
 
         app.MapHealthChecks("/healthz");
 

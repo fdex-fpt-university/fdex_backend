@@ -24,13 +24,14 @@ namespace FDex.Application.Features.Users.Handlers.Queries
             var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             var _mapper = scope.ServiceProvider.GetRequiredService<IMapper>();
             var usersRes = await _unitOfWork.UserRepository.GetReferredUsers(request.Wallet, request.Page, request.PageSize);
-      
+            var reward = await _unitOfWork.UserRepository.GetRewardAsync(request.Wallet);
             var usersMapped = _mapper.Map<List<UserDTO>>(usersRes.Users);
             _unitOfWork.Dispose();
             return new ReferredUserQueryModel()
             {
                 NumberOfPage = usersRes.NumberOfPage,
-                Users = usersMapped
+                Users = usersMapped,
+                Reward = reward
             };
         }
     }

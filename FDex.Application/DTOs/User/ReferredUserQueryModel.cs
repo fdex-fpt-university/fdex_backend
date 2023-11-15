@@ -12,6 +12,8 @@ namespace FDex.Application.DTOs.User
         public int NumberOfPage { get; set; }
 
         public List<UserDTO> Users { get; set; }
+
+        public string Reward { get; set; }
     }
 
     public class UserDTO
