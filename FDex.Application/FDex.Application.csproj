@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -60,6 +60,7 @@
     <None Remove="Features\Positions\Handlers\Queries\" />
     <None Remove="DTOs\User\" />
     <None Remove="Extensions\" />
+    <None Remove="Responses\User\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Contracts\" />
@@ -105,6 +106,7 @@
     <Folder Include="Features\Positions\Handlers\Commands\" />
     <Folder Include="Features\Positions\Requests\Commands\" />
     <Folder Include="Extensions\" />
+    <Folder Include="Responses\User\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FDex.Domain\FDex.Domain.csproj" />

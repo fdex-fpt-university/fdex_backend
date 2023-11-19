@@ -1,7 +1,7 @@
 ﻿using System;
 namespace FDex.Application.Responses.Common
 {
-    public abstract class BaseCommandResponse
+    public abstract class BaseResponseModel
     {
         public Guid Id { get; set; }
         public bool IsSuccess { get; set; }
