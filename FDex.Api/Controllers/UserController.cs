@@ -4,6 +4,7 @@ using FDex.Application.DTOs.User;
 using FDex.Application.Features.Users.Requests.Commands;
 using FDex.Application.Features.Users.Requests.Queries;
 using FDex.Application.Models.Infrastructure;
+using FDex.Application.Responses.User;
 using FDex.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -28,23 +29,14 @@ namespace FDex.Api.Controllers
         }
 
         [HttpPost("[action]")]
-        public async Task<bool> PostReferredUser([FromBody] UpdateReferredUserCommand command)
-        {
-            command = new UpdateReferredUserCommand() { ReferringUser = command.ReferringUser, ReferralUser = command.ReferralUser };
-            await _mediator.Send(command);
-            return true;
-        }
-
+        public async Task<bool> PostReferredUser([FromBody] UpdateReferredUserCommand command) => await _mediator.Send(command);
+        
         [HttpGet("[action]")]
         public async Task<ReferredUserQueryModel> GetReferredUsers([FromQuery] GetReferredUsersRequest query) => await _mediator.Send(query);
 
         [HttpGet("[action]")]
-        public async Task<object> GetReferralLevelInformation(string wallet)
-        {
-            object info = await _mediator.Send(new GetReferralLevelInformationRequest() { Wallet = wallet });
-            return info;
-        }
-
+        public async Task<UserReferralInformationResponseModel> GetReferralLevelInformation([FromQuery] GetReferralLevelInformationRequest query) => await _mediator.Send(query);
+        
         [HttpGet("[action]")]
         public async Task<Analytic> GetReferralSystemAnalytics()
         {
@@ -56,12 +48,7 @@ namespace FDex.Api.Controllers
         public async Task<List<UserDTOLeaderboardItemView>> GetLeaderboard([FromQuery] GetLeaderboardRequest query) => await _mediator.Send(query);
 
         [HttpPost("[action]")]
-        public async Task<bool> AddUser([FromBody] AddUserCommand command)
-        {
-            command = new AddUserCommand() { Wallet = command.Wallet};
-            await _mediator.Send(command);
-            return true;
-        }
+        public async Task<bool> AddUser([FromBody] AddUserCommand command) => await _mediator.Send(command);
 
         [HttpPost("[action]")]
         public async Task<bool> RewardClaimedAndSigned([FromBody] RewardClaimedAndSignedCommand command) => await _mediator.Send(command);

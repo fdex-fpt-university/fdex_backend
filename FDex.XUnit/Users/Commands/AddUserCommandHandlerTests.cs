@@ -47,7 +47,7 @@ namespace FDex.XUnit.Users.Commands
             _users = await _unitOfWork.UserRepository.GetAllAsync();
             _unitOfWork.Dispose();
             _users.Count.ShouldBe(userCount + 1);
-            result.ShouldBeOfType<BaseCommandResponse>();
+            result.ShouldBeOfType<BaseResponseModel>();
         }
 
         [Fact]
@@ -62,7 +62,7 @@ namespace FDex.XUnit.Users.Commands
             _users = await _unitOfWork.UserRepository.GetAllAsync();
             _unitOfWork.Dispose();
             _users.Count.ShouldBe(userCount);
-            result.ShouldBeOfType<BaseCommandResponse>();
+            result.ShouldBeOfType<BaseResponseModel>();
 
         }
     }
