@@ -21,7 +21,6 @@
     <None Remove="Profiles\" />
     <None Remove="DTOs\Swap\" />
     <None Remove="Features\Swaps\" />
-    <None Remove="Responses\Swap\" />
     <None Remove="Features\Swaps\Handlers\Commands\" />
     <None Remove="Features\Swaps\Requests\Commands\" />
     <None Remove="Services\" />
@@ -60,7 +59,9 @@
     <None Remove="Features\Positions\Handlers\Queries\" />
     <None Remove="DTOs\User\" />
     <None Remove="Extensions\" />
-    <None Remove="Responses\User\" />
+    <None Remove="Responses\Swaps\" />
+    <None Remove="Responses\Users\" />
+    <None Remove="Responses\Positions\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Contracts\" />
@@ -73,7 +74,6 @@
     <Folder Include="Responses\Common\" />
     <Folder Include="DTOs\Swap\" />
     <Folder Include="Features\Swaps\" />
-    <Folder Include="Responses\Swap\" />
     <Folder Include="Features\Swaps\Handlers\Commands\" />
     <Folder Include="Features\Swaps\Requests\Commands\" />
     <Folder Include="Services\" />
@@ -106,7 +106,9 @@
     <Folder Include="Features\Positions\Handlers\Commands\" />
     <Folder Include="Features\Positions\Requests\Commands\" />
     <Folder Include="Extensions\" />
-    <Folder Include="Responses\User\" />
+    <Folder Include="Responses\Swaps\" />
+    <Folder Include="Responses\Users\" />
+    <Folder Include="Responses\Positions\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FDex.Domain\FDex.Domain.csproj" />

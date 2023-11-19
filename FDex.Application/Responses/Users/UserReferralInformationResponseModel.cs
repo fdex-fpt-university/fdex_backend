@@ -1,7 +1,7 @@
 ﻿using System;
 using FDex.Application.Responses.Common;
 
-namespace FDex.Application.Responses.User
+namespace FDex.Application.Responses.Users
 {
 	public class UserReferralInformationResponseModel : BaseResponseModel
     {
