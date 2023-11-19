@@ -4,7 +4,7 @@ using FDex.Application.DTOs.User;
 using FDex.Application.Features.Users.Requests.Commands;
 using FDex.Application.Features.Users.Requests.Queries;
 using FDex.Application.Models.Infrastructure;
-using FDex.Application.Responses.User;
+using FDex.Application.Responses.Users;
 using FDex.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;

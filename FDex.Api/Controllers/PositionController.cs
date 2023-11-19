@@ -2,6 +2,7 @@
 using FDex.Application.DTOs.Reporter;
 using FDex.Application.DTOs.TradingPosition;
 using FDex.Application.Features.Positions.Requests.Queries;
+using FDex.Application.Responses.Positions;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -27,7 +28,7 @@ namespace FDex.Api.Controllers
         public async Task<List<PositionDTOViewHistory>> GetHitories([FromQuery] GetPositionHistoriesRequest query) => await _mediator.Send(query);
 
         [HttpGet("[action]")]
-        public async Task<List<PositionDTOLeaderboardItemView>> GetLeaderboardPositions([FromQuery] GetLeaderboardPositionsRequest query) => await _mediator.Send(query);
+        public async Task<PositionLeaderboardResponseModel> GetLeaderboardPositions([FromQuery] GetLeaderboardPositionsRequest query) => await _mediator.Send(query);
     }
 }
 

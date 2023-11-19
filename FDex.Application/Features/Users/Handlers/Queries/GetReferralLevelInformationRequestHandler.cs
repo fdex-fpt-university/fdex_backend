@@ -1,7 +1,7 @@
 ﻿using System;
 using FDex.Application.Contracts.Persistence;
 using FDex.Application.Features.Users.Requests.Queries;
-using FDex.Application.Responses.User;
+using FDex.Application.Responses.Users;
 using FDex.Domain.Entities;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;

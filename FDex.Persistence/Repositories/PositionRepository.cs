@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using Azure;
 using FDex.Application.Contracts.Persistence;
 using FDex.Application.DTOs.TradingPosition;
@@ -42,6 +43,9 @@ namespace FDex.Persistence.Repositories
                 }
                 response.Add(responseItem);
             }
+            response = isLeverageAsc.HasValue ? (isLeverageAsc.Value ? response.OrderBy(item => item.Leverage).ToList() : response.OrderByDescending(item => item.Leverage).ToList()) : response;
+            response = isSizeAsc.HasValue ? (isSizeAsc.Value ? response.OrderBy(item => BigInteger.Parse(item.Size)).ToList() : response.OrderByDescending(item => BigInteger.Parse(item.Size)).ToList()) : response;
+            response = isPNLAsc.HasValue ? (isPNLAsc.Value ? response.OrderBy(item => BigInteger.Parse(item.PNL)).ToList() : response.OrderByDescending(item => BigInteger.Parse(item.PNL)).ToList()) : response;
             return response;
         }
 
