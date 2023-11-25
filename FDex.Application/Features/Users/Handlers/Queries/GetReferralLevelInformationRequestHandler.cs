@@ -22,6 +22,7 @@ namespace FDex.Application.Features.Users.Handlers.Queries
             await using var scope = _serviceProvider.CreateAsyncScope();
             var _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             User user = await _unitOfWork.UserRepository.FindAsync(request.Wallet);
+            string reward = await _unitOfWork.UserRepository.GetRewardAsync(user.Wallet);
             _unitOfWork.Dispose();
             if (user != null)
             {
@@ -30,6 +31,7 @@ namespace FDex.Application.Features.Users.Handlers.Queries
                 response.TradePoint = user.TradePoint;
                 response.ReferralPoint = user.ReferralPoint;
                 response.Level = user.Level;
+                response.Reward = reward;
             }
             else
             {

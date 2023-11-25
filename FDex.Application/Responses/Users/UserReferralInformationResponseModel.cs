@@ -8,6 +8,7 @@ namespace FDex.Application.Responses.Users
         public decimal? TradePoint { get; set; }
         public decimal? ReferralPoint { get; set; }
         public int? Level { get; set; }
+        public string? Reward { get; set; }
     }
 }
 
