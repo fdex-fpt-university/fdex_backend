@@ -48,7 +48,7 @@ namespace FDex.Api.Controllers
         public async Task<List<UserDTOLeaderboardItemView>> GetLeaderboard([FromQuery] GetLeaderboardRequest query) => await _mediator.Send(query);
 
         [HttpPost("[action]")]
-        public async Task<bool> AddUser([FromBody] AddUserCommand command) => await _mediator.Send(command);
+        public async Task<AddUserCommandResponseModel> AddUser([FromBody] AddUserCommand command) => await _mediator.Send(command);
 
         [HttpPost("[action]")]
         public async Task<bool> RewardClaimedAndSigned([FromBody] RewardClaimedAndSignedCommand command) => await _mediator.Send(command);
