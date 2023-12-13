@@ -52,6 +52,8 @@ namespace FDex.Application.Services
                 try
                 {
                     StreamingWebSocketClient client = new(HandleWebsocketString());
+
+                    // Create filter input for each event by get event ABI
                     NewFilterInput swapFilterInput = Event<SwapDTO>.GetEventABI().CreateFilterInput();
                     NewFilterInput liquidityFilterInput = Event<LiquidityDTO>.GetEventABI().CreateFilterInput();
                     NewFilterInput reporterAddedFilterInput = Event<ReporterAddedDTO>.GetEventABI().CreateFilterInput();
@@ -63,6 +65,7 @@ namespace FDex.Application.Services
                     NewFilterInput closePositionFilterInput = Event<FDexClosePositionDTO>.GetEventABI().CreateFilterInput();
                     NewFilterInput liquidatePositionFilterInput = Event<LiquidatePositionDTO>.GetEventABI().CreateFilterInput();
 
+                    // Create subscription for each event
                     EthLogsObservableSubscription swapSubscription = new(client);
                     EthLogsObservableSubscription liquiditySubscription = new(client);
                     EthLogsObservableSubscription reporterAddedSubscription = new(client);
@@ -407,6 +410,7 @@ namespace FDex.Application.Services
                             await closePositionSubscription.SubscribeAsync(closePositionFilterInput);
                             await liquidatePositionSubscription.SubscribeAsync(liquidatePositionFilterInput);
                         }
+                        // Delay time to check websocket health
                         await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
                     }
                 }

@@ -403,6 +403,7 @@ namespace FDex.Application.Services
             }
         }
 
+        // Handle block number of current searching block
         private BlockParameter HandleBlockParameter(string contract)
         {
             if (isFirstParam)
