@@ -34,7 +34,7 @@ namespace FDex.Application.Services
         bool isFirstParam = true;
         private BigInteger _latestBlockNumber = 0;
         private BigInteger _currentReporterBlockNumber = 34002213;
-        private BigInteger _currentCommonBlockNumber = 35354830;
+        private BigInteger _currentCommonBlockNumber = 35955264;
         private BigInteger _limitBlockNumber = 9999;
         const string RPC_URL = "https://bsc.getblock.io/6d5630b5-f63b-4830-bc17-90d9c7ada49e/testnet/";
 
@@ -50,8 +50,8 @@ namespace FDex.Application.Services
         {
             await using var scope = _serviceProvider.CreateAsyncScope();
             _latestBlockNumber = await _web3.Eth.Blocks.GetBlockNumber.SendRequestAsync();
-            var poolAddress = "0x9688c33D70BcDcD9502fD55D3A3A2d304f1CaF34";
-            var oracleAddress = "0x1E16D408a6ae4E2a867cd33F15cb7E17441139c1";
+            var poolAddress = "0x5Ef76CfeFF94A19f518CA8b07500F145Ea78a3a0";
+            var oracleAddress = "0x78E24EdcC1218B98620711d5a0BFc7E3596Edee5";
             var increasePositionEventHandler = _web3.Eth.GetEvent<FDexIncreaPositionDTO>(poolAddress);
             var decreasePositionEventHandler = _web3.Eth.GetEvent<FDexDecreaPositionDTO>(poolAddress);
             var openPositionEventHandler = _web3.Eth.GetEvent<FDexOpenPositionDTO>(poolAddress);
